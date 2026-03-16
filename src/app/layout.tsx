@@ -1,27 +1,26 @@
 import Providers from '@/components/layout/providers';
 import { Toaster } from '@/components/ui/sonner';
 import { fontVariables } from '@/components/themes/font.config';
-import { DEFAULT_THEME } from '@/components/themes/theme.config';
 import ThemeProvider from '@/components/themes/theme-provider';
 import { cn } from '@/lib/utils';
 import type { Metadata, Viewport } from 'next';
-import { cookies } from 'next/headers';
 import NextTopLoader from 'nextjs-toploader';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import '../styles/globals.css';
 
 const META_THEME_COLORS = {
-  light: '#ffffff',
-  dark: '#09090b'
+  light: '#f8fafc',
+  dark: '#0d1117'
 };
 
 export const metadata: Metadata = {
-  title: 'Next Shadcn',
-  description: 'Basic dashboard with Next.js and Shadcn'
+  title: 'CloutIQ',
+  description:
+    'AI-powered content intelligence for short-form video creators'
 };
 
 export const viewport: Viewport = {
-  themeColor: META_THEME_COLORS.light
+  themeColor: META_THEME_COLORS.dark
 };
 
 export default async function RootLayout({
@@ -29,20 +28,24 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const activeThemeValue = cookieStore.get('active_theme')?.value;
-  const themeToApply = activeThemeValue || DEFAULT_THEME;
-
   return (
-    <html lang='en' suppressHydrationWarning data-theme={themeToApply}>
+    <html lang='en' suppressHydrationWarning>
       <head>
+        <link rel='preconnect' href='https://fonts.googleapis.com' />
+        <link
+          rel='preconnect'
+          href='https://fonts.gstatic.com'
+          crossOrigin='anonymous'
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                // Set meta theme color
-                if (localStorage.theme === 'dark' || ((!('theme' in localStorage) || localStorage.theme === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '${META_THEME_COLORS.dark}')
+                var t = localStorage.getItem('theme');
+                if (t !== 'light') {
+                  document.documentElement.classList.add('dark');
+                  localStorage.setItem('theme', 'dark');
+                  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '${META_THEME_COLORS.dark}');
                 }
               } catch (_) {}
             `
@@ -54,17 +57,17 @@ export default async function RootLayout({
           'bg-background overflow-x-hidden overscroll-none font-sans antialiased',
           fontVariables
         )}
+        suppressHydrationWarning
       >
-        <NextTopLoader color='var(--primary)' showSpinner={false} />
+        <NextTopLoader color='#38bdf8' showSpinner={false} height={2} />
         <NuqsAdapter>
           <ThemeProvider
             attribute='class'
-            defaultTheme='system'
-            enableSystem
+            defaultTheme='dark'
             disableTransitionOnChange
             enableColorScheme
           >
-            <Providers activeThemeValue={themeToApply}>
+            <Providers>
               <Toaster />
               {children}
             </Providers>
