@@ -24,25 +24,25 @@ AI-powered content intelligence platform for short-form video creators. Analyze 
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) (preferred) or Node.js
+- [Node.js](https://nodejs.org) 18+ (or [Bun](https://bun.sh))
 - Git
 
 ### Setup
 
 ```bash
 # Clone the repo
-git clone https://github.com/Cloutiq/frontend.git
+git clone https://github.com/AbdulAhadArain/frontend.git
 cd frontend
 
 # Install dependencies
-bun install
+npm install
 
 # Set up environment variables
 cp env.example.txt .env.local
 # Edit .env.local with your API keys (see Environment Variables below)
 
 # Start dev server
-bun run dev
+npm run dev
 ```
 
 The app will be available at http://localhost:3000.
@@ -51,7 +51,7 @@ The app will be available at http://localhost:3000.
 
 | Variable | Purpose |
 |---|---|
-| `NEXT_PUBLIC_API_URL` | Backend base URL (`https://api.cloutiq.ai` prod, `http://localhost:3000` dev) |
+| `NEXT_PUBLIC_API_URL` | Backend base URL (`https://api.cloutiq.ai` prod, `http://localhost:8080` dev) |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google OAuth client ID |
 | `NEXT_PUBLIC_POSTHOG_KEY` | PostHog project API key |
 | `NEXT_PUBLIC_POSTHOG_HOST` | PostHog host (default `https://us.i.posthog.com`) |
@@ -62,14 +62,14 @@ The app will be available at http://localhost:3000.
 ## Development Commands
 
 ```bash
-bun run dev              # Dev server
-bun run build            # Production build
-bun run start            # Production server
-bun run lint             # Run ESLint
-bun run lint:fix         # Fix lint issues + format
-bun run lint:strict      # Zero warnings mode
-bun run format           # Format with Prettier
-bun run format:check     # Check formatting
+npm run dev              # Dev server
+npm run build            # Production build
+npm run start            # Production server
+npm run lint             # Run ESLint
+npm run lint:fix         # Fix lint issues + format
+npm run lint:strict      # Zero warnings mode
+npm run format           # Format with Prettier
+npm run format:check     # Check formatting
 ```
 
 ## Project Structure
@@ -82,22 +82,24 @@ src/
 │   ├── register/            # Registration
 │   ├── forgot-password/     # Password reset request
 │   ├── reset-password/      # Password reset (token-based)
-│   ├── dashboard/           # Script analysis + file upload
-│   │   └── history/         # Past analyses
-│   ├── settings/            # User profile + password management
-│   └── admin/               # Admin panel (ADMIN role only)
+│   ├── change-credentials/  # Forced credential change (admin first login)
+│   ├── (app)/               # Protected routes layout (sidebar + header)
+│   │   ├── dashboard/       # Script analysis + file upload
+│   │   ├── history/         # Past analyses (paginated)
+│   │   ├── settings/        # User profile + password management
+│   │   └── admin/           # Admin panel (ADMIN role only)
 ├── features/                # Feature-based modules
 │   ├── analysis/            # Script analysis UI (12 output sections)
 │   ├── auth/                # Custom JWT auth + token management
-│   ├── history/             # Analysis history
-│   ├── admin/               # Admin user management + stats
+│   ├── dashboard/           # Dashboard components (upgrade modal)
 │   └── landing/             # Landing page components
 ├── components/
 │   ├── ui/                  # shadcn/ui components
-│   └── layout/              # Sidebar, header, providers
+│   └── layout/              # Sidebar, header, auth guard, providers
+├── stores/                  # Zustand stores (auth, analysis)
 ├── config/                  # Nav config with RBAC
 ├── hooks/                   # Custom React hooks
-├── lib/                     # Utilities (cn, API client, parsers)
+├── lib/                     # Utilities (cn, API client, auth cookies, analytics)
 ├── styles/                  # Global CSS + theme tokens
 └── types/                   # TypeScript types
 ```
@@ -107,27 +109,31 @@ src/
 - Script analysis with 12-section output (viral scoring, retention curve, script rewrite, distribution pack)
 - Audio/video file upload + transcription (Whisper)
 - Google OAuth + email/password authentication
-- JWT token management with automatic refresh
+- JWT token management with automatic 401 refresh (queue-based interceptor)
 - Plan-based usage limits (FREE: 3/month, CREATOR: unlimited)
 - Stripe checkout for plan upgrades
-- Admin dashboard with user management
-- Dark/light theme with custom design system
+- Admin dashboard with 8 stat cards, merged user table, plan override, revenue tracking
+- Dark/light theme with custom card-glow design system
 - Arabic RTL support for analysis results
-- PostHog event tracking
+- PostHog event tracking (9 events + identify)
+- Sentry error monitoring
 - Mobile responsive
 
 ## Design System
 
 - **Dark mode default** — Linear.app + Vercel dashboard aesthetic
-- **Sharp edges** — no rounded corners (`rounded-none` or `rounded-sm` max)
+- **Card style** — `.card-glow` class: translucent bg, layered shadows, cyan glow on hover
+- **Sharp edges** — 6px border radius max
 - **Flat surfaces** — no gradients, subtle borders
 - **Fonts:** Barlow Condensed (headings), Barlow (body), JetBrains Mono (metrics)
 - **Score colors:** Green (70-100), Amber (40-69), Red (0-39)
 
-## Documentation
+## Deployment
 
-- [CLAUDE.md](./CLAUDE.md) — full development guide for AI assistants
-- [FRONTEND_HANDOFF.md](./FRONTEND_HANDOFF.md) — API specs, request/response examples, UI requirements
+- **Hosting:** Vercel
+- **Production branch:** `main`
+- **Preview branch:** `dev`
+- **Backend:** `https://api.cloutiq.ai`
 
 ## Based On
 

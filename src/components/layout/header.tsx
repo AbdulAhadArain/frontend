@@ -21,7 +21,8 @@ function getUsageColor(used: number): string {
 export default function Header() {
   const router = useRouter();
   const { user, logout: storeLogout, refreshToken } = useAuthStore();
-  const isFree = user?.plan === 'FREE';
+  const isAdmin = user?.role === 'ADMIN';
+  const isFree = !isAdmin && user?.plan === 'FREE';
   const used = user?.analysesThisMonth ?? 0;
 
   async function handleLogout() {
@@ -46,8 +47,8 @@ export default function Header() {
       </div>
 
       <div className='flex items-center gap-3 px-4'>
-        {/* Plan badge */}
-        {user && isFree && (
+        {/* Plan badge (hidden for admin) */}
+        {user && !isAdmin && isFree && (
           <Badge
             variant='outline'
             className='hidden border-score-mid/50 bg-score-mid/10 font-mono text-xs text-score-mid sm:inline-flex'
@@ -55,7 +56,7 @@ export default function Header() {
             FREE
           </Badge>
         )}
-        {user && user.plan === 'CREATOR' && (
+        {user && !isAdmin && user.plan === 'CREATOR' && (
           <Badge
             variant='outline'
             className='hidden border-primary/50 bg-primary/10 font-mono text-xs text-primary sm:inline-flex'

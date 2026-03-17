@@ -140,7 +140,7 @@ export default function LandingPage() {
 
           {/* Example scores */}
           <motion.div
-            className='border border-border bg-card p-6'
+            className='card-glow p-6'
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -199,7 +199,7 @@ export default function LandingPage() {
           </h2>
           <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-4'>
             {features.map((f) => (
-              <div key={f.title} className='border border-border bg-card p-5'>
+              <div key={f.title} className='card-glow p-5'>
                 <f.icon className='mb-3 size-6 text-primary' />
                 <h3 className='font-heading text-sm font-bold text-foreground'>
                   {f.title}

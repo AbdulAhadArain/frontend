@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth.store';
 import apiClient from '@/lib/api-client';
@@ -19,6 +20,8 @@ import type { ApiSuccessResponse, User } from '@/types/auth';
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, accessToken, setUser, setTokens } = useAuthStore();
   const [ready, setReady] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     async function restoreSession() {
@@ -81,12 +84,48 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     restoreSession();
   }, [accessToken, user, setUser, setTokens]);
 
+  // Client-side role guard: admin cannot access /dashboard or /history
+  useEffect(() => {
+    if (!user) return;
+    const isAdmin = user.role === 'ADMIN';
+    const adminBlocked = ['/dashboard', '/history'];
+    const userBlocked = ['/admin'];
+
+    if (isAdmin && adminBlocked.some((r) => pathname === r || pathname.startsWith(`${r}/`))) {
+      router.replace('/admin');
+    }
+    if (!isAdmin && userBlocked.some((r) => pathname === r || pathname.startsWith(`${r}/`))) {
+      router.replace('/dashboard');
+    }
+  }, [user, pathname, router]);
+
   if (!ready) {
     return (
       <div className='fixed inset-0 z-50 flex items-center justify-center bg-background'>
         <div className='size-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
       </div>
     );
+  }
+
+  // Block render while redirecting
+  if (user) {
+    const isAdmin = user.role === 'ADMIN';
+    const adminBlocked = ['/dashboard', '/history'];
+    const userBlocked = ['/admin'];
+    if (isAdmin && adminBlocked.some((r) => pathname === r || pathname.startsWith(`${r}/`))) {
+      return (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-background'>
+          <div className='size-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+        </div>
+      );
+    }
+    if (!isAdmin && userBlocked.some((r) => pathname === r || pathname.startsWith(`${r}/`))) {
+      return (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-background'>
+          <div className='size-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+        </div>
+      );
+    }
   }
 
   return <>{children}</>;

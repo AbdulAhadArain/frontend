@@ -62,22 +62,25 @@ export function LoginForm() {
       return;
     }
 
-    setAuthCookies('USER');
-    router.push(redirectTo);
-
-    // Fetch user profile in background
-    apiClient
-      .get<ApiSuccessResponse<User>>('/auth/who-am-i')
-      .then((res) => {
-        const u = res.data.data;
-        setUser(u);
-        setAuthCookies(u.role);
-        try {
-          identifyUser(u);
-          trackUserLoggedIn(u.id, authMethod);
-        } catch {}
-      })
-      .catch(() => {});
+    // Fetch user profile to determine role before redirecting
+    try {
+      const whoRes = await apiClient.get<ApiSuccessResponse<User>>(
+        '/auth/who-am-i'
+      );
+      const u = whoRes.data.data;
+      setUser(u);
+      setAuthCookies(u.role);
+      try {
+        identifyUser(u);
+        trackUserLoggedIn(u.id, authMethod);
+      } catch {}
+      const dest = u.role === 'ADMIN' ? '/admin' : redirectTo;
+      router.push(dest);
+    } catch {
+      // Fallback: redirect without role info
+      setAuthCookies('USER');
+      router.push(redirectTo);
+    }
   }
 
   async function onSubmit(formData: LoginFormData) {

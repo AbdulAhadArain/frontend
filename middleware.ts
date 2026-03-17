@@ -51,9 +51,21 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  // Redirect non-admin users away from admin routes
-  if (isAdminRoute && userRole !== 'ADMIN') {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  // Role-based route restrictions
+  if (isProtectedRoute && isAuthenticated && !mustChange) {
+    const isUserRoute = ['/dashboard', '/history'].some(
+      (r) => pathname === r || pathname.startsWith(`${r}/`)
+    );
+
+    // ADMIN can only access /admin and /settings
+    if (userRole === 'ADMIN' && isUserRoute) {
+      return NextResponse.redirect(new URL('/admin', request.url));
+    }
+
+    // USER cannot access /admin
+    if (isAdminRoute && userRole !== 'ADMIN') {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
   }
 
   // Redirect authenticated users away from auth pages
@@ -63,7 +75,8 @@ export function middleware(request: NextRequest) {
         new URL('/change-credentials', request.url)
       );
     }
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const dest = userRole === 'ADMIN' ? '/admin' : '/dashboard';
+    return NextResponse.redirect(new URL(dest, request.url));
   }
 
   // /change-credentials requires auth but not mustChange check

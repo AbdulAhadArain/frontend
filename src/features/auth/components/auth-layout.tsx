@@ -24,7 +24,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className='flex min-h-screen'>
       {/* Left panel — branding + decorative scores */}
-      <div className='bg-card relative hidden w-1/2 flex-col justify-between border-r border-border p-12 lg:flex'>
+      <div className='card-glow relative hidden w-1/2 flex-col justify-between border-r border-border p-12 lg:flex'>
         <div>
           <h1 className='font-heading text-3xl font-bold text-foreground'>
             CloutIQ

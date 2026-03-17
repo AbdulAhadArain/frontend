@@ -24,7 +24,9 @@ export default function AppSidebar() {
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'ADMIN';
 
-  const allItems = isAdmin ? [...navItems, adminNavItem] : navItems;
+  const allItems = isAdmin
+    ? [adminNavItem, navItems.find((i) => i.url === '/settings')!]
+    : navItems.filter((i) => i.url !== '/admin');
 
   return (
     <Sidebar collapsible='icon'>
@@ -32,7 +34,7 @@ export default function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size='lg' asChild>
-              <Link href='/dashboard'>
+              <Link href={isAdmin ? '/admin' : '/dashboard'}>
                 <div className='bg-primary text-primary-foreground flex aspect-square size-8 shrink-0 items-center justify-center rounded-sm'>
                   <span className='font-heading text-sm font-bold'>CQ</span>
                 </div>
@@ -49,7 +51,7 @@ export default function AppSidebar() {
 
       <SidebarContent className='overflow-x-hidden'>
         <SidebarGroup>
-          <SidebarGroupLabel className='mt-6 mb-2'>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel className='sr-only'>Navigation</SidebarGroupLabel>
           <SidebarMenu className='gap-1'>
             {allItems.map((item) => {
               const Icon = item.icon ? Icons[item.icon] : Icons.logo;

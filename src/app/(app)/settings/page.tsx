@@ -51,7 +51,7 @@ export default function SettingsPage() {
       </h1>
 
       {/* Profile section */}
-      <div className='mb-6 border border-border bg-card p-6'>
+      <div className='card-glow mb-6 p-6'>
         <h2 className='mb-4 font-heading text-lg font-bold text-foreground'>
           Profile
         </h2>
@@ -94,7 +94,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Password section */}
-      <div className='border border-border bg-card p-6'>
+      <div className='card-glow p-6'>
         <h2 className='mb-4 font-heading text-lg font-bold text-foreground'>
           Password
         </h2>

@@ -21,8 +21,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
   const d = payload[0].payload;
   return (
     <div
-      className='max-w-xs rounded-[4px] border border-border bg-card p-3'
-      style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
+      className='card-glow max-w-xs p-3'
     >
       <div className='mb-1 flex items-center gap-2'>
         <span className='font-mono text-[10px] text-muted-foreground'>
@@ -45,7 +44,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
 
 export function RetentionCurve({ data }: RetentionCurveProps) {
   return (
-    <div className='bg-card p-6'>
+    <div className='card-glow p-6'>
       <div className='mb-4 flex items-center justify-between'>
         <h3 className='section-title font-heading text-lg font-semibold tracking-[0.01em] text-foreground'>
           Retention Curve

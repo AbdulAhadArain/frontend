@@ -174,7 +174,7 @@ export default function HistoryPage() {
           </div>
 
           {/* Table with real header + skeleton rows */}
-          <div className='w-full overflow-hidden rounded-[4px] border border-border bg-card'>
+          <div className='card-glow w-full overflow-hidden'>
             {tableHeader}
             {Array.from({ length: 5 }).map((_, i) => (
               <div
@@ -209,7 +209,7 @@ export default function HistoryPage() {
   if (error) {
     return (
       <div className='flex flex-1 flex-col items-center justify-center p-8'>
-        <div className='flex w-full max-w-sm flex-col items-center gap-3 border border-border bg-card p-8'>
+        <div className='card-glow flex w-full max-w-sm flex-col items-center gap-3 p-8'>
           <IconAlertTriangle className='size-8 text-score-mid' />
           <h1 className='font-heading text-lg font-bold text-foreground'>
             Could not load history
@@ -234,7 +234,7 @@ export default function HistoryPage() {
   if (meta && meta.total === 0) {
     return (
       <div className='flex flex-1 flex-col items-center justify-center p-8'>
-        <div className='flex w-full max-w-md flex-col items-center gap-3 border-2 border-dashed border-border p-8'>
+        <div className='card-glow flex w-full max-w-md flex-col items-center gap-3 border-2 border-dashed p-8'>
           <IconFileText className='size-10 text-muted-foreground' />
           <h1 className='font-heading text-xl font-bold text-foreground'>
             No analyses yet
@@ -275,7 +275,7 @@ export default function HistoryPage() {
         </div>
 
         {/* Table */}
-        <div className='w-full overflow-hidden rounded-[4px] border border-border bg-card'>
+        <div className='card-glow w-full overflow-hidden'>
           {tableHeader}
 
           {/* Data rows */}
@@ -431,7 +431,7 @@ export default function HistoryPage() {
                 <p className='mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground'>
                   Script
                 </p>
-                <div className='max-h-60 overflow-y-auto border border-border bg-card p-3'>
+                <div className='card-glow max-h-60 overflow-y-auto p-3'>
                   <p className='whitespace-pre-wrap text-sm text-foreground'>
                     {selectedEntry.scriptText || 'No script text available'}
                   </p>

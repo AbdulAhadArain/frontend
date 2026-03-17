@@ -71,14 +71,53 @@
   background-attachment: fixed;
 }
 
-/* Dark mode card — subtle glass depth */
+/* ═══════════════════════════════════════
+   CARD-GLOW — global card style
+   ═══════════════════════════════════════ */
+.card-glow {
+  background: rgba(22, 27, 34, 0.85);
+  border: 1px solid rgba(48, 54, 61, 0.8);
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 1px rgba(56, 189, 248, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 4px 16px rgba(0, 0, 0, 0.3);
+  transition: all 200ms ease;
+}
+.card-glow:hover {
+  border-color: rgba(56, 189, 248, 0.15);
+  box-shadow:
+    0 0 0 1px rgba(56, 189, 248, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Light mode card-glow */
+:root:not(.dark) .card-glow,
+:root:not(.dark) [data-slot='card'] {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 0 0 1px rgba(37, 99, 235, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 4px 16px rgba(0, 0, 0, 0.08);
+}
+:root:not(.dark) .card-glow:hover,
+:root:not(.dark) [data-slot='card']:hover {
+  border-color: rgba(37, 99, 235, 0.2);
+  box-shadow:
+    0 0 0 1px rgba(37, 99, 235, 0.1),
+    0 4px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Dark mode card — subtle glass depth (applies to bg-card utility) */
 .dark .bg-card {
-  background: rgba(22, 27, 34, 0.8);
+  background: rgba(22, 27, 34, 0.85);
   backdrop-filter: blur(1px);
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.25),
-    0 4px 12px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    0 0 0 1px rgba(56, 189, 248, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 /* ═══════════════════════════════════════

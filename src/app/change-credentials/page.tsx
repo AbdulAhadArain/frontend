@@ -93,7 +93,7 @@ export default function ChangeCredentialsPage() {
 
   return (
     <div className='flex min-h-screen items-center justify-center bg-background p-4'>
-      <div className='w-full max-w-md border border-border bg-card p-8'>
+      <div className='card-glow w-full max-w-md p-8'>
         <h1 className='font-heading text-2xl font-bold text-foreground'>
           Set your credentials
         </h1>

@@ -43,7 +43,7 @@ export function DistributionPack({ data }: DistributionPackProps) {
   }
 
   return (
-    <div className='bg-card p-6'>
+    <div className='card-glow p-6'>
       <h3 className='section-title mb-5 font-heading text-lg font-semibold tracking-[0.01em] text-foreground'>
         Distribution Pack
       </h3>
