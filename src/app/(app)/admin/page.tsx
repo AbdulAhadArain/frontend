@@ -33,6 +33,8 @@ import {
 import { Input } from '@/components/ui/input';
 import apiClient from '@/lib/api-client';
 import { cn } from '@/lib/utils';
+import { trackPlanUpdatedByAdmin } from '@/lib/analytics';
+import { useAuthStore } from '@/stores/auth.store';
 import type { User, ApiErrorResponse } from '@/types/auth';
 
 // ── Types ──────────────────────────────────────────────
@@ -295,6 +297,8 @@ function PlanDistribution({
 // ── Main Page ──────────────────────────────────────────
 
 export default function AdminPage() {
+  const adminUser = useAuthStore((s) => s.user);
+
   // Data state
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [recentIds, setRecentIds] = useState<Set<string>>(new Set());
@@ -497,6 +501,11 @@ export default function AdminPage() {
         plan: newPlan
       });
       toast.success(`Plan updated to ${newPlan}`);
+      try {
+        if (adminUser?.id) {
+          trackPlanUpdatedByAdmin(adminUser.id, userId, newPlan, oldPlan);
+        }
+      } catch {}
       fetchStats();
     } catch (error) {
       // Revert on failure

@@ -14,7 +14,10 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/stores/auth.store';
 import apiClient from '@/lib/api-client';
-import type { ApiErrorResponse } from '@/types/auth';
+import { identifyUser } from '@/lib/analytics';
+import { OnboardingModal } from '@/features/onboarding/components/onboarding-modal';
+import type { OnboardingData } from '@/features/onboarding/types/onboarding';
+import type { ApiErrorResponse, ApiSuccessResponse, User } from '@/types/auth';
 
 const changePasswordSchema = z.object({
   oldPassword: z.string().min(1, 'Current password is required'),
@@ -39,10 +42,36 @@ const setPasswordSchema = z
     path: ['confirmPassword']
   });
 
+const PROFILE_LABELS: Record<string, string> = {
+  platform: 'Platform',
+  niche: 'Niche',
+  audienceAgeRange: 'Audience Age',
+  audienceRegion: 'Audience Region',
+  audienceLanguage: 'Audience Language',
+  averageViewCount: 'Avg. View Count',
+  biggestFrustration: 'Biggest Frustration'
+};
+
+const PROFILE_FIELDS = Object.keys(PROFILE_LABELS) as (keyof typeof PROFILE_LABELS)[];
+
 export default function SettingsPage() {
-  const { user } = useAuthStore();
-  const isGoogleOnly = !!user?.googleId;
-  const [hasPassword, setHasPassword] = useState(!isGoogleOnly);
+  const { user, setUser } = useAuthStore();
+  const [hasPassword, setHasPassword] = useState(user?.hasPassword ?? !user?.googleId);
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
+
+  const isAdmin = user?.role === 'ADMIN';
+
+  async function handleProfileComplete() {
+    try {
+      const res = await apiClient.get<ApiSuccessResponse<User>>(
+        '/auth/who-am-i'
+      );
+      setUser(res.data.data);
+      identifyUser(res.data.data);
+    } catch {}
+    setShowProfileEdit(false);
+    toast.success('Creator profile updated');
+  }
 
   return (
     <div className='max-w-2xl flex-1 p-6 md:p-8'>
@@ -92,6 +121,51 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
+
+      {/* Creator Profile section — non-admin only */}
+      {!isAdmin && user && (
+        <div className='card-glow mb-6 p-6'>
+          <div className='mb-4 flex items-center justify-between'>
+            <h2 className='font-heading text-lg font-bold text-foreground'>
+              Creator Profile
+            </h2>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => setShowProfileEdit(true)}
+            >
+              Edit Profile
+            </Button>
+          </div>
+          <div className='grid gap-3'>
+            {PROFILE_FIELDS.map((field) => (
+              <div key={field}>
+                <Label className='text-muted-foreground'>
+                  {PROFILE_LABELS[field]}
+                </Label>
+                <p className='text-sm text-foreground capitalize'>
+                  {(user[field as keyof typeof user] as string) || '—'}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <OnboardingModal
+            open={showProfileEdit}
+            onClose={() => setShowProfileEdit(false)}
+            initialData={{
+              platform: user.platform,
+              niche: user.niche,
+              audienceAgeRange: user.audienceAgeRange,
+              audienceRegion: user.audienceRegion,
+              audienceLanguage: user.audienceLanguage,
+              averageViewCount: user.averageViewCount,
+              biggestFrustration: user.biggestFrustration
+            }}
+            onComplete={handleProfileComplete}
+          />
+        </div>
+      )}
 
       {/* Password section */}
       <div className='card-glow p-6'>

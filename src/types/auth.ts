@@ -11,6 +11,16 @@ export interface User {
   updatedAt: string;
   createdBy: string | null;
   updatedBy: string | null;
+  platform: string | null;
+  niche: string | null;
+  audienceAgeRange: string | null;
+  audienceRegion: string | null;
+  audienceLanguage: string | null;
+  averageViewCount: string | null;
+  biggestFrustration: string | null;
+  onboardingCompleted: boolean;
+  analysesLimit: number;
+  hasPassword: boolean;
 }
 
 export interface AuthTokens {

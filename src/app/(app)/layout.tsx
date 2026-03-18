@@ -2,6 +2,7 @@ import KBar from '@/components/kbar';
 import AppSidebar from '@/components/layout/app-sidebar';
 import Header from '@/components/layout/header';
 import { AuthGuard } from '@/components/layout/auth-guard';
+import { OnboardingGate } from '@/components/layout/onboarding-gate';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
@@ -23,11 +24,13 @@ export default async function AppLayout({
     <KBar>
       <SidebarProvider defaultOpen={defaultOpen}>
         <AuthGuard>
-          <AppSidebar />
-          <SidebarInset>
-            <Header />
-            {children}
-          </SidebarInset>
+          <OnboardingGate>
+            <AppSidebar />
+            <SidebarInset>
+              <Header />
+              {children}
+            </SidebarInset>
+          </OnboardingGate>
         </AuthGuard>
       </SidebarProvider>
     </KBar>

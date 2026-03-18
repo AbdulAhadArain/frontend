@@ -36,7 +36,11 @@ const languages: { code: AnalysisLanguage; label: string; flag: string }[] = [
   { code: 'en', label: 'EN', flag: '\u{1F1EC}\u{1F1E7}' },
   { code: 'ar', label: 'AR', flag: '\u{1F1F8}\u{1F1E6}' },
   { code: 'hi', label: 'HI', flag: '\u{1F1EE}\u{1F1F3}' },
-  { code: 'es', label: 'ES', flag: '\u{1F1EA}\u{1F1F8}' }
+  { code: 'es', label: 'ES', flag: '\u{1F1EA}\u{1F1F8}' },
+  { code: 'fr', label: 'FR', flag: '\u{1F1EB}\u{1F1F7}' },
+  { code: 'de', label: 'DE', flag: '\u{1F1E9}\u{1F1EA}' },
+  { code: 'tr', label: 'TR', flag: '\u{1F1F9}\u{1F1F7}' },
+  { code: 'bn', label: 'BN', flag: '\u{1F1E7}\u{1F1E9}' }
 ];
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
@@ -252,7 +256,9 @@ export default function DashboardPage() {
         '/api/analyze',
         {
           scriptText: scriptText.trim(),
-          language: selectedLanguage
+          language: selectedLanguage,
+          ...(user?.platform && { platform: user.platform }),
+          ...(user?.niche && { niche: user.niche })
         }
       );
       setAnalysis(res.data.data);
@@ -294,6 +300,8 @@ export default function DashboardPage() {
       if (analyzeWithTranscription) {
         formData.append('analyze', 'true');
         formData.append('language', selectedLanguage);
+        if (user?.platform) formData.append('platform', user.platform);
+        if (user?.niche) formData.append('niche', user.niche);
       }
 
       const res = await apiClient.post('/api/transcribe', formData, {
@@ -543,7 +551,7 @@ export default function DashboardPage() {
             {/* Language selector */}
             <div className='mt-4 flex items-center gap-3'>
               <span className='font-mono text-[11px] text-muted-foreground'>Language:</span>
-              <div className='flex gap-1'>
+              <div className='flex flex-wrap gap-1'>
                 {languages.map((lang) => (
                   <button
                     key={lang.code}

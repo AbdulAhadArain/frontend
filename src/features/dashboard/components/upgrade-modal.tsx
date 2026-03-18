@@ -15,7 +15,7 @@ interface UpgradeModalProps {
 
 const benefits = [
   'Unlimited analyses',
-  'All 4 languages',
+  'All 8 languages',
   'Full distribution pack',
   'Priority processing'
 ];

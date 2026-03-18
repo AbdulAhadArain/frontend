@@ -7,7 +7,12 @@ export function identifyUser(user: User) {
     email: user.email,
     plan: user.plan,
     role: user.role,
-    name: user.name
+    name: user.name,
+    ...(user.platform && { platform: user.platform }),
+    ...(user.niche && { niche: user.niche }),
+    ...(user.audienceAgeRange && { audienceAgeRange: user.audienceAgeRange }),
+    ...(user.audienceRegion && { audienceRegion: user.audienceRegion }),
+    onboardingCompleted: user.onboardingCompleted
   });
 }
 
@@ -63,4 +68,25 @@ export function trackUpgradeClicked(userId: string) {
 
 export function trackUpgradeCompleted(userId: string) {
   posthog.capture('upgrade_completed', { userId, plan: 'CREATOR' });
+}
+
+export function trackOnboardingCompleted(
+  userId: string,
+  data: Record<string, string | null>
+) {
+  posthog.capture('onboarding_completed', { userId, ...data });
+}
+
+export function trackPlanUpdatedByAdmin(
+  adminId: string,
+  userId: string,
+  newPlan: string,
+  oldPlan: string
+) {
+  posthog.capture('plan_updated_by_admin', {
+    adminId,
+    userId,
+    newPlan,
+    oldPlan
+  });
 }

@@ -86,7 +86,7 @@ export interface TranscriptionResponse {
   analysis?: Analysis;
 }
 
-export type AnalysisLanguage = 'en' | 'ar' | 'hi' | 'es';
+export type AnalysisLanguage = 'en' | 'ar' | 'hi' | 'es' | 'fr' | 'de' | 'tr' | 'bn';
 
 export interface AnalyzeRequest {
   scriptText: string;

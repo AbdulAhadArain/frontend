@@ -36,7 +36,7 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/dashboard';
-  const { setTokens, setUser } = useAuthStore();
+  const { setTokens, setUser, setShowOnboarding } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
@@ -70,6 +70,9 @@ export function LoginForm() {
       const u = whoRes.data.data;
       setUser(u);
       setAuthCookies(u.role);
+      if (!u.onboardingCompleted && u.role !== 'ADMIN') {
+        setShowOnboarding(true);
+      }
       try {
         identifyUser(u);
         trackUserLoggedIn(u.id, authMethod);

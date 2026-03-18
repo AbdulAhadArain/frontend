@@ -18,15 +18,18 @@ import type { ApiSuccessResponse, User } from '@/types/auth';
  * This handles page refreshes where Zustand state is lost but cookies persist.
  */
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, accessToken, setUser, setTokens } = useAuthStore();
+  const { user, accessToken, setUser, setTokens, setShowOnboarding } = useAuthStore();
   const [ready, setReady] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
     async function restoreSession() {
-      // Case 1: already have user — nothing to do
+      // Case 1: already have user — just check onboarding
       if (user) {
+        if (!user.onboardingCompleted && user.role !== 'ADMIN') {
+          setShowOnboarding(true);
+        }
         setReady(true);
         return;
       }
@@ -37,7 +40,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
           const res = await apiClient.get<ApiSuccessResponse<User>>(
             '/auth/who-am-i'
           );
-          setUser(res.data.data);
+          const u = res.data.data;
+          setUser(u);
+          if (!u.onboardingCompleted && u.role !== 'ADMIN') {
+            setShowOnboarding(true);
+          }
         } catch {
           // Token may be invalid; interceptor will handle redirect
         }
@@ -69,6 +76,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
           const u = userRes.data.data;
           setUser(u);
           setAuthCookies(u.role);
+          if (!u.onboardingCompleted && u.role !== 'ADMIN') {
+            setShowOnboarding(true);
+          }
         } catch {
           // Refresh token expired or invalid — clear everything
           clearAuthCookies();
@@ -82,7 +92,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       setReady(true);
     }
     restoreSession();
-  }, [accessToken, user, setUser, setTokens]);
+  }, [accessToken, user, setUser, setTokens, setShowOnboarding]);
 
   // Client-side role guard: admin cannot access /dashboard or /history
   useEffect(() => {

@@ -45,7 +45,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
   const router = useRouter();
-  const { setTokens, setUser } = useAuthStore();
+  const { setTokens, setUser, setShowOnboarding } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -74,6 +74,9 @@ export function RegisterForm() {
         const u = res.data.data;
         setUser(u);
         setAuthCookies(u.role);
+        if (!u.onboardingCompleted && u.role !== 'ADMIN') {
+          setShowOnboarding(true);
+        }
         try {
           identifyUser(u);
           trackSignUp(u.id, authMethod);
