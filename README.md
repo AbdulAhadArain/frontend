@@ -130,10 +130,12 @@ src/
 
 ## Deployment
 
-- **Hosting:** Vercel
+- **Hosting:** Vercel (connected to `AbdulAhadArain/frontend`)
 - **Production branch:** `main`
 - **Preview branch:** `dev`
 - **Backend:** `https://api.cloutiq.ai`
+- **Git remotes:** `origin` → `Cloutiq/frontend`, `myfork` → `AbdulAhadArain/frontend`
+- Always push to both remotes: `git push origin dev:main && git push myfork dev:main`
 
 ## Based On
 
