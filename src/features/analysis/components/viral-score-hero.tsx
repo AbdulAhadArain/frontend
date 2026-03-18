@@ -37,7 +37,7 @@ export function ViralScoreHero({ score }: ViralScoreHeroProps) {
       }}
     >
       <motion.span
-        className='block font-heading text-[7rem] font-bold leading-none tracking-tight md:text-[10rem]'
+        className='block font-heading text-[4.5rem] font-bold leading-none tracking-tight sm:text-[7rem] md:text-[10rem]'
         style={{
           color,
           letterSpacing: '-0.02em',

@@ -124,7 +124,7 @@ export function RegisterForm() {
   const isLoading = isSubmitting || isGoogleLoading;
 
   return (
-    <div className='flex flex-col gap-6 p-8'>
+    <div className='flex flex-col gap-6 px-4 py-6 sm:p-8'>
       {/* Header */}
       <div>
         <h2 className='font-heading text-2xl font-bold text-foreground'>

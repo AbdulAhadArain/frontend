@@ -61,7 +61,7 @@ export function UpgradeModal({
 
           {/* Modal */}
           <motion.div
-            className='card-glow relative z-10 w-full max-w-md p-8'
+            className='card-glow relative z-10 mx-4 w-full max-w-md p-6 sm:mx-0 sm:p-8'
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 8 }}

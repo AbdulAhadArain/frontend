@@ -39,8 +39,8 @@ function DimensionRow({
       className='group cursor-pointer border-b border-border/50 last:border-0'
       onClick={() => setOpen(!open)}
     >
-      <div className='flex items-center gap-4 py-3.5'>
-        <span className='w-[140px] shrink-0 text-[13px] font-medium text-foreground'>
+      <div className='flex items-center gap-2 py-3.5 sm:gap-4'>
+        <span className='w-[100px] shrink-0 text-[12px] font-medium text-foreground sm:w-[140px] sm:text-[13px]'>
           {label}
         </span>
 
@@ -59,7 +59,7 @@ function DimensionRow({
         </div>
 
         <span
-          className='min-w-[48px] text-right font-mono text-sm font-medium'
+          className='min-w-[36px] text-right font-mono text-sm font-medium sm:min-w-[48px]'
           style={{ color }}
         >
           {dim.score}
@@ -90,7 +90,7 @@ export function FiveDimensions(props: FiveDimensionsProps) {
   ][];
 
   return (
-    <div className='card-glow p-6'>
+    <div className='card-glow p-4 sm:p-6'>
       <h3 className='section-title mb-5 font-heading text-lg font-semibold tracking-[0.01em] text-foreground'>
         Score Breakdown
       </h3>

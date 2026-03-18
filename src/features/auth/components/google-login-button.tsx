@@ -15,7 +15,7 @@ export function GoogleLoginButton({
   const { resolvedTheme } = useTheme();
 
   return (
-    <div className='flex w-full items-center justify-center [&>div]:w-full'>
+    <div className='flex w-full items-center justify-center overflow-hidden [&>div]:w-full'>
       <GoogleLogin
         onSuccess={(response) => {
           if (response.credential) {
@@ -25,7 +25,7 @@ export function GoogleLoginButton({
         onError={onError}
         theme={resolvedTheme === 'dark' ? 'filled_black' : 'outline'}
         size='large'
-        width='400'
+        width='320'
         shape='rectangular'
         text='continue_with'
       />

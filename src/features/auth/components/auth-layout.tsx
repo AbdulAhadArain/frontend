@@ -73,8 +73,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       </div>
 
       {/* Right panel — form */}
-      <div className='flex w-full items-center justify-center p-6 lg:w-1/2 lg:p-12'>
-        <div className='w-full max-w-[28rem]'>{children}</div>
+      <div className='flex w-full items-center justify-center px-4 py-6 sm:p-6 lg:w-1/2 lg:p-12'>
+        <div className='w-full max-w-[28rem] overflow-hidden'>{children}</div>
       </div>
     </div>
   );

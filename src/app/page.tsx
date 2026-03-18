@@ -104,7 +104,7 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className='mx-auto max-w-6xl px-6 pb-20 pt-16 md:pt-24'>
-        <div className='grid items-center gap-12 md:grid-cols-2'>
+        <div className='grid items-center gap-8 md:grid-cols-2 md:gap-12'>
           <div>
             <div className='mb-4 flex items-center gap-2'>
               <IconBrandTiktok className='size-5 text-muted-foreground' />
@@ -159,7 +159,7 @@ export default function LandingPage() {
             <div className='flex flex-col gap-3'>
               {exampleScores.map((item, i) => (
                 <div key={item.label} className='flex items-center gap-3'>
-                  <span className='w-28 font-mono text-xs text-muted-foreground'>
+                  <span className='w-20 font-mono text-xs text-muted-foreground sm:w-28'>
                     {item.label}
                   </span>
                   <div className='relative h-2 flex-1 overflow-hidden rounded-sm bg-border'>

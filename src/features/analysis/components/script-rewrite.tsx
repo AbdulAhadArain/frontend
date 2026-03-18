@@ -46,7 +46,7 @@ export function ScriptRewrite({ data, originalScript }: ScriptRewriteProps) {
   }
 
   return (
-    <div className='border-t border-border py-8 px-6'>
+    <div className='border-t border-border px-4 py-6 sm:px-6 sm:py-8'>
       <div className='mb-5 flex items-center justify-between'>
         <h3 className='section-title font-heading text-lg font-semibold tracking-[0.01em] text-foreground'>
           Script Rewrite
@@ -92,7 +92,7 @@ export function ScriptRewrite({ data, originalScript }: ScriptRewriteProps) {
               Original
             </span>
           </div>
-          <div className='max-h-[400px] overflow-y-auto p-4'>
+          <div className='max-h-[250px] overflow-y-auto p-3 sm:max-h-[400px] sm:p-4'>
             <p className='whitespace-pre-wrap text-[13px] leading-[1.8] text-muted-foreground'>
               {originalScript}
             </p>
@@ -106,7 +106,7 @@ export function ScriptRewrite({ data, originalScript }: ScriptRewriteProps) {
               Rewritten
             </span>
           </div>
-          <div className='max-h-[400px] overflow-y-auto p-4'>
+          <div className='max-h-[250px] overflow-y-auto p-3 sm:max-h-[400px] sm:p-4'>
             <p className='whitespace-pre-wrap text-[13px] leading-[1.8] text-foreground'>
               {parts.map((part, i) => (
                 <Fragment key={i}>

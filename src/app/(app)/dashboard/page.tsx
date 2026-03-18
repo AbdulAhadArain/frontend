@@ -393,7 +393,7 @@ export default function DashboardPage() {
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className='flex flex-1 flex-col items-center justify-center gap-6 p-8'
           >
-            <div className='h-[2px] w-72 overflow-hidden rounded-full bg-muted'>
+            <div className='h-[2px] w-full max-w-72 overflow-hidden rounded-full bg-muted'>
               <div
                 className='h-full rounded-full bg-primary'
                 style={{
@@ -436,7 +436,7 @@ export default function DashboardPage() {
           transition={{ duration: 0.25, ease: 'easeOut' }}
           className='flex-1 overflow-y-auto'
         >
-          <div className='mx-auto max-w-4xl p-6 md:p-8'>
+          <div className='mx-auto max-w-4xl p-4 sm:p-6 md:p-8'>
             <div className='mb-6 flex items-center justify-between'>
               <h1 className='font-heading text-2xl font-bold text-foreground'>
                 Analysis Results

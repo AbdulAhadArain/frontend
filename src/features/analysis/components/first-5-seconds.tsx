@@ -37,7 +37,7 @@ function CopyButton({ text }: { text: string }) {
 
 export function First5Seconds({ data }: First5SecondsProps) {
   return (
-    <div className='border-t border-border py-8 px-6'>
+    <div className='border-t border-border px-4 py-6 sm:px-6 sm:py-8'>
       <h3 className='section-title mb-5 font-heading text-lg font-semibold tracking-[0.01em] text-foreground'>
         First 5 Seconds
       </h3>

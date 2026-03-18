@@ -43,7 +43,7 @@ export function DistributionPack({ data }: DistributionPackProps) {
   }
 
   return (
-    <div className='card-glow p-6'>
+    <div className='card-glow p-4 sm:p-6'>
       <h3 className='section-title mb-5 font-heading text-lg font-semibold tracking-[0.01em] text-foreground'>
         Distribution Pack
       </h3>
@@ -134,7 +134,7 @@ export function DistributionPack({ data }: DistributionPackProps) {
             <span className='mb-2 block font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground'>
               On-Screen Text
             </span>
-            <div className='overflow-hidden rounded-[4px] border border-border/50'>
+            <div className='overflow-x-auto rounded-[4px] border border-border/50'>
               <table className='w-full text-[13px]'>
                 <thead>
                   <tr className='border-b border-border/50 bg-muted/30'>
