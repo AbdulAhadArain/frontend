@@ -78,7 +78,7 @@ export function RegisterForm() {
     try {
       const res = await axios.get<ApiSuccessResponse<User>>(
         '/backend/auth/who-am-i',
-        { headers: { Authorization: `Bearer ${data.accessToken}` } }
+        { headers: { Authorization: `Bearer ${data.accessToken}`, 'Cache-Control': 'no-store' } }
       );
       const u = res.data.data;
       setAuthCookies(u.role);

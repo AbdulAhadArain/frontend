@@ -81,7 +81,7 @@ export function LoginForm() {
     try {
       const whoRes = await axios.get<ApiSuccessResponse<User>>(
         '/backend/auth/who-am-i',
-        { headers: { Authorization: `Bearer ${data.accessToken}` } }
+        { headers: { Authorization: `Bearer ${data.accessToken}`, 'Cache-Control': 'no-store' } }
       );
       const u = whoRes.data.data;
       setAuthCookies(u.role);

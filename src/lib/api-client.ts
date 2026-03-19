@@ -11,7 +11,8 @@ import type { ApiErrorResponse } from '@/types/auth';
 const apiClient = axios.create({
   baseURL: '/backend',
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-store'
   }
 });
 
