@@ -15,8 +15,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { GoogleLoginButton } from './google-login-button';
 import apiClient from '@/lib/api-client';
+import axios from 'axios';
 import { useAuthStore } from '@/stores/auth.store';
-import { setAuthCookies, setMustChangeCookie, setRefreshTokenCookie } from '@/lib/auth-cookie';
+import {
+  setAuthCookies,
+  setMustChangeCookie,
+  setRefreshTokenCookie,
+  clearAuthCookies
+} from '@/lib/auth-cookie';
 import { identifyUser, trackUserLoggedIn } from '@/lib/analytics';
 import type {
   ApiErrorResponse,
@@ -36,9 +42,15 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/dashboard';
-  const { setTokens, setUser, setShowOnboarding } = useAuthStore();
+  const { setTokens } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  // Clear any stale auth state from previous session on mount
+  useState(() => {
+    useAuthStore.getState().logout();
+    clearAuthCookies();
+  });
 
   const {
     register,
@@ -52,33 +64,32 @@ export function LoginForm() {
     data: AuthTokens,
     authMethod: 'email' | 'google'
   ) {
-    setTokens(data.accessToken, data.refreshToken);
+    // Only persist cookies — Zustand state is lost after full page reload
     setRefreshTokenCookie(data.refreshToken);
 
     if (data.mustChangeCredentials) {
+      // mustChangeCredentials needs Zustand + soft nav (stays in same session)
+      setTokens(data.accessToken, data.refreshToken);
       setAuthCookies('ADMIN');
       setMustChangeCookie(true);
       router.replace('/change-credentials');
       return;
     }
 
-    // Fetch user profile to determine role before redirecting
+    // Fetch user profile to determine role for correct redirect
+    // Use raw axios with explicit token (not apiClient — Zustand may be stale)
     try {
-      const whoRes = await apiClient.get<ApiSuccessResponse<User>>(
-        '/auth/who-am-i'
+      const whoRes = await axios.get<ApiSuccessResponse<User>>(
+        '/backend/auth/who-am-i',
+        { headers: { Authorization: `Bearer ${data.accessToken}` } }
       );
       const u = whoRes.data.data;
-      setUser(u);
       setAuthCookies(u.role);
-      if (!u.onboardingCompleted && u.role !== 'ADMIN') {
-        setShowOnboarding(true);
-      }
       try {
         identifyUser(u);
         trackUserLoggedIn(u.id, authMethod);
       } catch {}
       const dest = u.role === 'ADMIN' ? '/admin' : redirectTo;
-      // Full page load to clear Next.js Router Cache from previous session
       window.location.href = dest;
     } catch {
       // Fallback: redirect without role info

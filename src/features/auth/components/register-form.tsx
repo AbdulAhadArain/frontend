@@ -14,8 +14,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { GoogleLoginButton } from './google-login-button';
 import apiClient from '@/lib/api-client';
+import axios from 'axios';
 import { useAuthStore } from '@/stores/auth.store';
-import { setAuthCookies, setRefreshTokenCookie } from '@/lib/auth-cookie';
+import {
+  setAuthCookies,
+  setRefreshTokenCookie,
+  clearAuthCookies
+} from '@/lib/auth-cookie';
 import { identifyUser, trackSignUp } from '@/lib/analytics';
 import type {
   ApiErrorResponse,
@@ -43,10 +48,15 @@ const registerSchema = z
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
-  const { setTokens, setUser, setShowOnboarding } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  // Clear any stale auth state from previous session on mount
+  useState(() => {
+    useAuthStore.getState().logout();
+    clearAuthCookies();
+  });
 
   const {
     register,
@@ -60,21 +70,18 @@ export function RegisterForm() {
     data: AuthTokens,
     authMethod: 'email' | 'google'
   ) {
-    // Step 1: Store tokens
-    setTokens(data.accessToken, data.refreshToken);
+    // Only persist cookies — Zustand state is lost after full page reload
     setRefreshTokenCookie(data.refreshToken);
 
-    // Step 2: Fetch user profile BEFORE navigating
+    // Fetch user profile for analytics, then navigate
+    // Use raw axios with explicit token (not apiClient — Zustand may be stale)
     try {
-      const res = await apiClient.get<ApiSuccessResponse<User>>(
-        '/auth/who-am-i'
+      const res = await axios.get<ApiSuccessResponse<User>>(
+        '/backend/auth/who-am-i',
+        { headers: { Authorization: `Bearer ${data.accessToken}` } }
       );
       const u = res.data.data;
-      setUser(u);
       setAuthCookies(u.role);
-      if (!u.onboardingCompleted && u.role !== 'ADMIN') {
-        setShowOnboarding(true);
-      }
       try {
         identifyUser(u);
         trackSignUp(u.id, authMethod);
@@ -84,7 +91,7 @@ export function RegisterForm() {
       setAuthCookies('USER');
     }
 
-    // Step 3: Full page load to clear Next.js Router Cache from previous session
+    // Full page load — AuthGuard on /dashboard will restore session from cookie
     window.location.href = '/dashboard';
   }
 

@@ -41,10 +41,11 @@ export function setMustChangeCookie(mustChange: boolean) {
 
 export function clearAuthCookies() {
   if (typeof document === 'undefined') return;
-  document.cookie = `${AUTH_COOKIE}=; path=/; max-age=0`;
-  document.cookie = `${ROLE_COOKIE}=; path=/; max-age=0`;
+  document.cookie = `${AUTH_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
+  document.cookie = `${ROLE_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
   document.cookie = `${MUST_CHANGE_COOKIE}=; path=/; max-age=0`;
-  document.cookie = `${REFRESH_TOKEN_COOKIE}=; path=/; max-age=0`;
+  // Must match the SameSite=Strict used when setting the RT cookie
+  document.cookie = `${REFRESH_TOKEN_COOKIE}=; path=/; max-age=0; SameSite=Strict`;
 }
 
 export const AUTH_COOKIE_NAME = AUTH_COOKIE;
