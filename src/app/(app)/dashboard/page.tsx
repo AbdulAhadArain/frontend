@@ -32,15 +32,15 @@ import { UpgradeModal } from '@/features/dashboard/components/upgrade-modal';
 import type { Analysis, AnalysisLanguage } from '@/types/analysis';
 import type { ApiErrorResponse, ApiSuccessResponse, User } from '@/types/auth';
 
-const languages: { code: AnalysisLanguage; label: string; flag: string }[] = [
-  { code: 'en', label: 'EN', flag: '\u{1F1EC}\u{1F1E7}' },
-  { code: 'ar', label: 'AR', flag: '\u{1F1F8}\u{1F1E6}' },
-  { code: 'hi', label: 'HI', flag: '\u{1F1EE}\u{1F1F3}' },
-  { code: 'es', label: 'ES', flag: '\u{1F1EA}\u{1F1F8}' },
-  { code: 'fr', label: 'FR', flag: '\u{1F1EB}\u{1F1F7}' },
-  { code: 'de', label: 'DE', flag: '\u{1F1E9}\u{1F1EA}' },
-  { code: 'tr', label: 'TR', flag: '\u{1F1F9}\u{1F1F7}' },
-  { code: 'bn', label: 'BN', flag: '\u{1F1E7}\u{1F1E9}' }
+const languages: { code: AnalysisLanguage; label: string }[] = [
+  { code: 'en', label: 'EN' },
+  { code: 'ar', label: 'AR' },
+  { code: 'hi', label: 'HI' },
+  { code: 'es', label: 'ES' },
+  { code: 'fr', label: 'FR' },
+  { code: 'de', label: 'DE' },
+  { code: 'tr', label: 'TR' },
+  { code: 'bn', label: 'BN' }
 ];
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
@@ -558,7 +558,7 @@ export default function DashboardPage() {
                         : 'border border-border bg-transparent text-muted-foreground hover:border-muted-foreground/60 hover:text-foreground'
                     }`}
                   >
-                    {lang.flag} {lang.label}
+                    {lang.label}
                   </button>
                 ))}
               </div>

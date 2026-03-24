@@ -70,11 +70,15 @@ function normalizeEntry(raw: HistoryEntryRaw): HistoryEntry {
   };
 }
 
-const languageFlags: Record<string, { flag: string; code: string }> = {
-  en: { flag: '\u{1F1EC}\u{1F1E7}', code: 'EN' },
-  ar: { flag: '\u{1F1F8}\u{1F1E6}', code: 'AR' },
-  hi: { flag: '\u{1F1EE}\u{1F1F3}', code: 'HI' },
-  es: { flag: '\u{1F1EA}\u{1F1F8}', code: 'ES' }
+const languageCodes: Record<string, string> = {
+  en: 'EN',
+  ar: 'AR',
+  hi: 'HI',
+  es: 'ES',
+  fr: 'FR',
+  de: 'DE',
+  tr: 'TR',
+  bn: 'BN'
 };
 
 function formatDate(dateStr: string) {
@@ -281,10 +285,7 @@ export default function HistoryPage() {
           {/* Data rows */}
           {entries.map((entry) => {
             const { date, time } = formatDate(entry.createdAt);
-            const lang = languageFlags[entry.language] || {
-              flag: '',
-              code: entry.language.toUpperCase()
-            };
+            const langCode = languageCodes[entry.language] || entry.language.toUpperCase();
 
             return (
               <div
@@ -313,7 +314,7 @@ export default function HistoryPage() {
                   variant='outline'
                   className='w-fit font-mono text-[10px]'
                 >
-                  {lang.flag} {lang.code}
+                  {langCode}
                 </Badge>
 
                 {/* Viral score */}
@@ -403,18 +404,7 @@ export default function HistoryPage() {
                     variant='outline'
                     className='mt-1 font-mono text-[10px]'
                   >
-                    {(
-                      languageFlags[selectedEntry.language] || {
-                        flag: '',
-                        code: selectedEntry.language.toUpperCase()
-                      }
-                    ).flag}{' '}
-                    {(
-                      languageFlags[selectedEntry.language] || {
-                        flag: '',
-                        code: selectedEntry.language.toUpperCase()
-                      }
-                    ).code}
+                    {languageCodes[selectedEntry.language] || selectedEntry.language.toUpperCase()}
                   </Badge>
                 </div>
               </div>

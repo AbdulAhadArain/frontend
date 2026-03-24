@@ -1,4 +1,5 @@
 import Providers from '@/components/layout/providers';
+import { ChatwootWidget } from '@/components/chatwoot';
 import { Toaster } from '@/components/ui/sonner';
 import { fontVariables } from '@/components/themes/font.config';
 import ThemeProvider from '@/components/themes/theme-provider';
@@ -37,6 +38,10 @@ export default async function RootLayout({
           href='https://fonts.gstatic.com'
           crossOrigin='anonymous'
         />
+        <link
+          href='https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap'
+          rel='stylesheet'
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -69,6 +74,7 @@ export default async function RootLayout({
           >
             <Providers>
               <Toaster />
+              <ChatwootWidget />
               {children}
             </Providers>
           </ThemeProvider>
