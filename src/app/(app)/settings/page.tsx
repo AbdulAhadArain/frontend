@@ -6,7 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
-import { IconEye, IconEyeOff, IconLoader2 } from '@tabler/icons-react';
+import { IconEye, IconEyeOff, IconLoader2, IconCreditCard } from '@tabler/icons-react';
+import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +18,13 @@ import apiClient from '@/lib/api-client';
 import { identifyUser } from '@/lib/analytics';
 import { OnboardingModal } from '@/features/onboarding/components/onboarding-modal';
 import type { OnboardingData } from '@/features/onboarding/types/onboarding';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from '@/components/ui/dialog';
 import type { ApiErrorResponse, ApiSuccessResponse, User } from '@/types/auth';
 
 const changePasswordSchema = z.object({
@@ -61,7 +69,7 @@ export default function SettingsPage() {
 
   const isAdmin = user?.role === 'ADMIN';
 
-  async function handleProfileComplete() {
+  async function refreshUser() {
     try {
       const res = await apiClient.get<ApiSuccessResponse<User>>(
         '/auth/who-am-i'
@@ -69,6 +77,10 @@ export default function SettingsPage() {
       setUser(res.data.data);
       identifyUser(res.data.data);
     } catch {}
+  }
+
+  async function handleProfileComplete() {
+    await refreshUser();
     setShowProfileEdit(false);
     toast.success('Creator profile updated');
   }
@@ -167,6 +179,16 @@ export default function SettingsPage() {
         </div>
       )}
 
+      {/* Subscription section — non-admin only */}
+      {!isAdmin && (
+        <SubscriptionSection user={user} onRefresh={refreshUser} />
+      )}
+
+      {/* Billing History — non-admin only */}
+      {!isAdmin && user?.billingHistory && user.billingHistory.length > 0 && (
+        <BillingHistorySection history={user.billingHistory} />
+      )}
+
       {/* Password section */}
       <div className='card-glow p-6'>
         <h2 className='mb-4 font-heading text-lg font-bold text-foreground'>
@@ -255,6 +277,265 @@ function ChangePasswordForm() {
         Change Password
       </Button>
     </form>
+  );
+}
+
+// ── Subscription Section ─────────────────────────────────────
+
+function SubscriptionSection({
+  user,
+  onRefresh
+}: {
+  user: User | null;
+  onRefresh: () => Promise<void>;
+}) {
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const status = user?.subscriptionStatus;
+  const endDate = user?.subscriptionEndDate;
+  const formattedDate = endDate
+    ? format(new Date(endDate), 'MMM d, yyyy')
+    : null;
+
+  async function handleCancel() {
+    setLoading(true);
+    try {
+      await apiClient.post('/api/cancel-subscription');
+      toast.success(`Your subscription will end on ${formattedDate}`);
+      await onRefresh();
+    } catch (error) {
+      const msg =
+        (error as AxiosError<ApiErrorResponse>).response?.data?.message?.[0] ||
+        'Failed to cancel subscription';
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+      setShowCancelModal(false);
+    }
+  }
+
+  async function handleResume() {
+    setLoading(true);
+    try {
+      await apiClient.post('/api/resume-subscription');
+      toast.success('Your subscription has been resumed');
+      await onRefresh();
+    } catch (error) {
+      const msg =
+        (error as AxiosError<ApiErrorResponse>).response?.data?.message?.[0] ||
+        'Failed to resume subscription';
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+      setShowResumeModal(false);
+    }
+  }
+
+  async function handleUpgrade() {
+    try {
+      const res = await apiClient.post<ApiSuccessResponse<{ url: string }>>(
+        '/api/create-checkout'
+      );
+      window.location.href = res.data.data.url;
+    } catch (error) {
+      const msg =
+        (error as AxiosError<ApiErrorResponse>).response?.data?.message?.[0] ||
+        'Failed to start checkout';
+      toast.error(msg);
+    }
+  }
+
+  return (
+    <div className='card-glow mb-6 p-6'>
+      <h2 className='mb-4 font-heading text-lg font-bold text-foreground'>
+        Subscription
+      </h2>
+
+      {/* Active */}
+      {status === 'active' && (
+        <div className='flex flex-col gap-3'>
+          <div className='flex items-center gap-2'>
+            <Badge className='bg-primary text-primary-foreground'>
+              Creator
+            </Badge>
+            <span className='text-sm text-muted-foreground'>$10/month</span>
+          </div>
+          {formattedDate && (
+            <p className='text-sm text-muted-foreground'>
+              Next billing date: <span className='text-foreground'>{formattedDate}</span>
+            </p>
+          )}
+          <Button
+            variant='outline'
+            size='sm'
+            className='w-fit border-destructive text-destructive hover:bg-destructive/10'
+            onClick={() => setShowCancelModal(true)}
+          >
+            Cancel Subscription
+          </Button>
+        </div>
+      )}
+
+      {/* Canceling */}
+      {status === 'canceling' && (
+        <div className='flex flex-col gap-3'>
+          <div className='flex items-center gap-2'>
+            <Badge variant='outline' className='border-score-mid text-score-mid'>
+              Creator (canceling)
+            </Badge>
+          </div>
+          {formattedDate && (
+            <>
+              <p className='text-sm text-muted-foreground'>
+                Access until: <span className='text-foreground'>{formattedDate}</span>
+              </p>
+              <p className='text-xs text-score-mid'>
+                Your plan will not renew. You&apos;ll be moved to Free on {formattedDate}.
+              </p>
+            </>
+          )}
+          <Button
+            variant='outline'
+            size='sm'
+            className='w-fit'
+            onClick={() => setShowResumeModal(true)}
+          >
+            Resume Subscription
+          </Button>
+        </div>
+      )}
+
+      {/* Free / no subscription */}
+      {!status && (
+        <div className='flex flex-col gap-3'>
+          <div className='flex items-center gap-2'>
+            <Badge variant='outline' className='border-score-mid text-score-mid'>
+              Free
+            </Badge>
+            <span className='text-sm text-muted-foreground'>3 analyses/month</span>
+          </div>
+          <Button size='sm' className='w-fit' onClick={handleUpgrade}>
+            Upgrade to Creator — $10/month
+          </Button>
+        </div>
+      )}
+
+      {/* Cancel Confirmation Modal */}
+      <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Subscription</DialogTitle>
+          </DialogHeader>
+          <p className='text-sm text-muted-foreground'>
+            Are you sure? You&apos;ll keep Creator access until{' '}
+            <span className='font-medium text-foreground'>{formattedDate}</span>.
+            After that, you&apos;ll be on the Free plan (3 analyses/month).
+            No refund will be issued.
+          </p>
+          <DialogFooter className='gap-2'>
+            <Button
+              variant='outline'
+              onClick={() => setShowCancelModal(false)}
+              disabled={loading}
+            >
+              Keep My Plan
+            </Button>
+            <Button
+              variant='destructive'
+              onClick={handleCancel}
+              disabled={loading}
+            >
+              {loading ? <IconLoader2 className='mr-2 size-4 animate-spin' /> : null}
+              Cancel Subscription
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Resume Confirmation Modal */}
+      <Dialog open={showResumeModal} onOpenChange={setShowResumeModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Resume Subscription</DialogTitle>
+          </DialogHeader>
+          <p className='text-sm text-muted-foreground'>
+            Your Creator plan will continue and auto-renew on{' '}
+            <span className='font-medium text-foreground'>{formattedDate}</span>.
+          </p>
+          <DialogFooter className='gap-2'>
+            <Button
+              variant='outline'
+              onClick={() => setShowResumeModal(false)}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleResume} disabled={loading}>
+              {loading ? <IconLoader2 className='mr-2 size-4 animate-spin' /> : null}
+              Resume Subscription
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ── Billing History Section ──────────────────────────────────
+
+function BillingHistorySection({
+  history
+}: {
+  history: { date: string; event: string; amount: number | null }[];
+}) {
+  return (
+    <div className='card-glow mb-6 p-6'>
+      <h2 className='mb-4 font-heading text-lg font-bold text-foreground'>
+        Billing History
+      </h2>
+      <div className='overflow-hidden rounded-sm border border-border'>
+        {/* Header */}
+        <div className='grid grid-cols-3 border-b border-border bg-muted/30 px-4 py-2'>
+          <span className='font-mono text-[10px] font-medium uppercase tracking-wider text-muted-foreground'>
+            Date
+          </span>
+          <span className='font-mono text-[10px] font-medium uppercase tracking-wider text-muted-foreground'>
+            Event
+          </span>
+          <span className='text-right font-mono text-[10px] font-medium uppercase tracking-wider text-muted-foreground'>
+            Amount
+          </span>
+        </div>
+        {/* Rows */}
+        {history.map((entry, i) => {
+          let formattedDate = entry.date;
+          try {
+            formattedDate = format(new Date(entry.date), 'MMM d, yyyy');
+          } catch {}
+
+          return (
+            <div
+              key={i}
+              className='grid grid-cols-3 border-b border-border/50 px-4 py-3 last:border-b-0'
+            >
+              <span className='font-mono text-xs text-muted-foreground'>
+                {formattedDate}
+              </span>
+              <span className='text-sm text-foreground capitalize'>
+                {entry.event}
+              </span>
+              <span className='text-right font-mono text-sm text-foreground'>
+                {entry.amount != null
+                  ? `$${(entry.amount / 100).toFixed(2)}`
+                  : '\u2014'}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

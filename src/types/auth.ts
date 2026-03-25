@@ -21,6 +21,15 @@ export interface User {
   onboardingCompleted: boolean;
   analysesLimit: number;
   hasPassword: boolean;
+  subscriptionStatus: 'active' | 'canceling' | null;
+  subscriptionEndDate: string | null;
+  billingHistory: BillingHistoryEntry[] | null;
+}
+
+export interface BillingHistoryEntry {
+  date: string;
+  event: string;
+  amount: number | null;
 }
 
 export interface AuthTokens {
