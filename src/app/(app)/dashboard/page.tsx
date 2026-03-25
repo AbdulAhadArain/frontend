@@ -333,9 +333,7 @@ export default function DashboardPage() {
           );
         }
       } catch {}
-      if (analyzeWithTranscription) {
-        refreshUser();
-      }
+      refreshUser();
       setFile(null);
     } catch (error) {
       handleApiError(error);
