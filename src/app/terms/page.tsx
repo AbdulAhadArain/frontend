@@ -23,7 +23,7 @@ export default function TermsPage() {
             CloutIQ — Terms of Service
           </h1>
           <p className='mb-8 font-mono text-sm text-muted-foreground'>
-            Effective Date: March 25, 2026 &middot; cloutiq.ai
+            Effective Date: March 26, 2026 &middot; cloutiq.ai
           </p>
 
           <div className='prose-sm space-y-6 text-sm leading-relaxed text-muted-foreground'>
@@ -112,9 +112,8 @@ export default function TermsPage() {
                   month at $10.00 USD per month, billed monthly.
                 </li>
                 <li>
-                  <strong>Agency Plan:</strong> Custom pricing for team
-                  workspaces and multi-client access. Pricing agreed in writing
-                  prior to activation.
+                  <strong>Agency Plan:</strong> Available on request for agencies
+                  and teams. Contact team@cloutiq.ai for details.
                 </li>
               </ul>
 
@@ -155,11 +154,10 @@ export default function TermsPage() {
                 Price changes
               </h3>
               <p>
-                CloutIQ reserves the right to change subscription pricing with
-                30 days written notice to active subscribers. Notice will be
-                provided by email to the address registered on your account.
-                Continued use of the service after the effective date of a price
-                change constitutes acceptance of the new price.
+                CloutIQ reserves the right to change subscription pricing.
+                Updated pricing will be posted on the website. Continued use of
+                the service after the effective date of a price change
+                constitutes acceptance of the new price.
               </p>
             </section>
 
@@ -195,9 +193,8 @@ export default function TermsPage() {
                 scores more accurate for all users over time.
               </p>
               <p className='mt-3'>
-                You may opt out of contributing to the benchmark dataset at any
-                time by contacting team@cloutiq.ai. Opting out does not affect
-                your access to any feature of the service.
+                If you have questions about how your data is used in the
+                benchmark dataset, contact team@cloutiq.ai.
               </p>
             </section>
 
@@ -212,11 +209,10 @@ export default function TermsPage() {
               </h3>
               <p>
                 You may close your CloutIQ account at any time by contacting
-                team@cloutiq.ai or through the account deletion option in
-                settings. Upon closure, your account data and analysis history
-                will be deleted within 30 days in accordance with our Privacy
-                Policy. Anonymised benchmark data contributed prior to closure is
-                not deleted as it cannot be re-identified.
+                team@cloutiq.ai. Upon closure, your account data and analysis
+                history will be deleted within 30 days in accordance with our
+                Privacy Policy. Anonymised benchmark data contributed prior to
+                closure is not deleted as it cannot be re-identified.
               </p>
 
               <h3 className='mb-2 mt-4 text-sm font-semibold text-foreground'>
@@ -241,8 +237,7 @@ export default function TermsPage() {
                   subscription
                 </li>
                 <li>
-                  Has an outstanding payment that remains unresolved for more
-                  than 14 days
+                  Has an outstanding unpaid balance on a subscription account
                 </li>
               </ul>
               <p className='mt-3'>
@@ -337,11 +332,9 @@ export default function TermsPage() {
               </h2>
               <p>
                 CloutIQ may update these Terms of Service from time to time. When
-                we do, we will revise the effective date at the top of this page
-                and notify active subscribers by email with at least 14 days
-                notice before any material change takes effect. Continued use of
-                the service after the effective date of any update constitutes
-                your acceptance of the revised terms.
+                we do, we will revise the effective date at the top of this page.
+                Continued use of the service after the effective date of any
+                update constitutes your acceptance of the revised terms.
               </p>
             </section>
 

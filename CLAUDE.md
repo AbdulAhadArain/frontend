@@ -303,16 +303,18 @@ type BillingHistoryEntry = {
 - `GET /api/creator/:id/history` (paginated)
 
 ### 9. Terms (`/terms`) — Public
-- Full Terms of Service text (effective March 25, 2026)
+- Full Terms of Service text (effective March 26, 2026)
 - Server component, SEO indexable
 - Clean typography with numbered sections, bullet lists
 - Back-to-home link, card-glow container
+- T&C adjusted to only reflect features that are live on the platform (no references to unbuilt account deletion UI, team workspaces, automated email notifications, or opt-out mechanisms)
 - Contact: `team@cloutiq.ai`
 
 ### 10. Privacy (`/privacy`) — Public
-- Placeholder for Termly privacy policy embed
+- **BLOCKED:** Waiting for Termly embed code from client (Abdullah)
 - Server component, SEO indexable
-- Will contain Termly embed script once provided by client
+- Currently shows placeholder text — needs Termly embed script to go live
+- Required for Google Ads approval
 - Contact: `team@cloutiq.ai`
 
 ### 11. Admin (`/admin`) — Auth Required, role: ADMIN
@@ -581,11 +583,12 @@ All cards use the `.card-glow` CSS class defined in `globals.css`:
 
 ## Legal Pages
 
-- `/terms` — Terms of Service, server-rendered, public, SEO indexable
-- `/privacy` — Privacy Policy via Termly embed (placeholder until Termly script provided), public, SEO indexable
+- `/terms` — Terms of Service (effective March 26, 2026), server-rendered, public, SEO indexable. T&C adjusted to only reference live platform features — no unbuilt promises.
+- `/privacy` — **BLOCKED: waiting for Termly embed code from client.** Currently shows placeholder. Required for Google Ads.
 - Both linked from: landing page footer, app sidebar footer
 - Consent lines present on: register form, upgrade modal, settings upgrade button
 - Contact email: `team@cloutiq.ai` (NOT `hello@cloutiq.ai`)
+- Google Ads requirement: both pages must be live and linked from footer before ad campaigns can be submitted
 - Required for Google Ads approval
 
 ## Chatwoot (Live Chat)
