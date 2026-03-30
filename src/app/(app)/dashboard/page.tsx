@@ -43,7 +43,7 @@ const languages: { code: AnalysisLanguage; label: string }[] = [
   { code: 'bn', label: 'BN' }
 ];
 
-const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
+const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
 
 // Rotating loading message sequences
 const ANALYZE_MESSAGES = [
@@ -225,7 +225,7 @@ export default function DashboardPage() {
     if (accepted.length > 0) {
       const f = accepted[0];
       if (f.size > MAX_FILE_SIZE) {
-        toast.error('File must be under 25 MB');
+        toast.error('File must be under 500 MB');
         return;
       }
       setFile(f);
@@ -237,6 +237,7 @@ export default function DashboardPage() {
     accept: {
       'audio/mpeg': ['.mp3'],
       'video/mp4': ['.mp4'],
+      'video/quicktime': ['.mov'],
       'audio/wav': ['.wav']
     },
     maxFiles: 1,
@@ -524,7 +525,7 @@ export default function DashboardPage() {
                 <>
                   <IconUpload className='size-5 text-muted-foreground/60' />
                   <p className='text-[13px] text-muted-foreground'>
-                    Drop MP3, MP4, or WAV here (max 25 MB)
+                    Drop MP3, MP4, MOV, or WAV here (max 500 MB)
                   </p>
                 </>
               )}
