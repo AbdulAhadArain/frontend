@@ -53,11 +53,12 @@ src/
 ├── components/
 │   ├── ui/                  # shadcn components (don't modify; extend)
 │   ├── layout/              # Sidebar, header, providers
-│   └── chatwoot.tsx         # Chatwoot live chat widget (identifies users, hides on auth pages)
+│   ├── chatwoot.tsx         # Chatwoot live chat widget (identifies users, hides on auth pages)
+│   └── gtm-tracker.tsx      # GTM page_data + user_data events on route changes
 ├── config/
 │   └── nav-config.ts        # Navigation items with RBAC
 ├── hooks/                   # Custom React hooks
-├── lib/                     # Utilities (cn, api client, parsers)
+├── lib/                     # Utilities (cn, api client, parsers, gtm)
 ├── styles/
 │   ├── globals.css          # Tailwind + CloutIQ theme tokens
 │   ├── landing.css          # Landing page styles (custom CSS, not Tailwind)
@@ -134,7 +135,8 @@ CloutIQ uses its own JWT auth backend. Clerk is from the starter template and mu
 | `/auth/reset-password` | POST | No | Reset password with token from email link |
 | `/users` | CRUD | Admin | User management |
 | `/api/analyze` | POST | Yes | Analyze script text |
-| `/api/transcribe` | POST | Yes | Transcribe file (multipart, max 25 MB) |
+| `/api/transcribe` | POST | Yes | Transcribe file (multipart, max 500 MB, direct to backend) |
+| `/api/latest-purchase` | GET | Yes | Latest Stripe purchase details (for GTM tracking) |
 | `/api/creator/:id/history` | GET | Yes | Past analyses (paginated, Phase 2) |
 | `/admin/stats` | GET | Admin | Platform stats (users, analyses, plans) |
 | `/admin/recent-signups` | GET | Admin | Last 20 user signups |
@@ -172,7 +174,9 @@ All scores are integers 0-100. Retention curve always has exactly 6 entries.
 
 ### Transcription (`POST /api/transcribe`)
 
-Multipart form-data: field `file` (MP3/MP4/WAV, max 25 MB).
+Multipart form-data: field `file` (MP3/MP4/MOV/WAV, max 500 MB).
+
+**IMPORTANT:** The transcribe upload bypasses the Vercel proxy (`/backend`) and posts directly to `${NEXT_PUBLIC_API_URL}/api/transcribe` because Vercel has a body size limit. The Bearer token is manually attached via `useAuthStore.getState().accessToken`. All other API calls still go through the `/backend` proxy.
 
 Optional fields: `analyze` ("true"/"false"), `language` (required when analyze=true).
 
@@ -222,7 +226,7 @@ type BillingHistoryEntry = {
 - Check via `GET /auth/who-am-i` → `plan` + `analysesThisMonth`
 - FREE plan: show usage counter ("2/3 analyses used"), proactively block at limit
 - Backend returns 403 `"Plan Limit Reached"` → show upgrade modal
-- Stripe flow: `POST /api/create-checkout` → redirect to Stripe → webhook updates plan
+- Stripe flow: `POST /api/create-checkout` → redirect to Stripe → webhook updates plan → redirects to `/dashboard?checkout=success`
 - Counter resets automatically on 1st of each month (server-side cron)
 - Both `/api/analyze` and `/api/transcribe?analyze=true` count against limit
 
@@ -268,7 +272,7 @@ type BillingHistoryEntry = {
 
 ### 6. Dashboard (`/dashboard`) — Auth Required
 - **Script input:** large textarea, language selector (8 languages: en/ar/hi/es/fr/de/tr/bn), "Analyze" button
-- **File upload:** drag-and-drop area, accepted formats (MP3/MP4/WAV, 25 MB), "Also analyze" toggle, language selector (when analyze on), "Transcribe" button
+- **File upload:** drag-and-drop area, accepted formats (MP3/MP4/MOV/WAV, 500 MB), "Also analyze" toggle, language selector (when analyze on), "Transcribe" button
 - **Analysis output — 12 sections:**
   1. Viral Probability — hero score (large circular gauge / score card)
   2. Hook Strength — score progress bar + explanation
@@ -311,10 +315,10 @@ type BillingHistoryEntry = {
 - Contact: `team@cloutiq.ai`
 
 ### 10. Privacy (`/privacy`) — Public
-- **BLOCKED:** Waiting for Termly embed code from client (Abdullah)
+- Termly-generated privacy policy HTML embedded via `dangerouslySetInnerHTML`
+- HTML content stored in `src/app/privacy/privacy-content.html` (read at build time, `\r\n` normalized)
 - Server component, SEO indexable
-- Currently shows placeholder text — needs Termly embed script to go live
-- Required for Google Ads approval
+- Theme-aware CSS overrides in `globals.css` (`.privacy-termly-embed`) — forces white text in dark mode, dark text in light mode
 - Contact: `team@cloutiq.ai`
 
 ### 11. Admin (`/admin`) — Auth Required, role: ADMIN
@@ -439,6 +443,40 @@ Events to track:
 | `plan_updated_by_admin` | Admin changes user plan | `adminId, userId, newPlan, oldPlan` |
 
 After login: `posthog.identify(userId, { email, plan, role, platform?, niche?, onboardingCompleted })`
+
+## Google Tag Manager (GTM)
+
+- **Container ID:** `GTM-T6FZ9855`
+- **Snippet:** `<head>` script + `<noscript>` iframe in root layout (`src/app/layout.tsx`)
+- **Helper:** `src/lib/gtm.ts` — `pushToDataLayer()`, `generateEventId()`, `GTM_ID`
+- **Tracker:** `src/components/gtm-tracker.tsx` — fires `page_data` on every route change, `user_data` when authenticated
+- **Package definitions:** Free = `free_monthly` / `free` / $0, Creator = `creator_monthly` / `paid` / $10
+- **`package_type` values:** Only `free` or `paid` — never use other values
+
+### GTM Events (11 total)
+
+| Event | When | Location |
+|---|---|---|
+| `page_data` | Every route change | `gtm-tracker.tsx` |
+| `user_data` | User authenticated | `gtm-tracker.tsx` |
+| `view_package` | Pricing section enters viewport (IntersectionObserver, once) | `page.tsx` (landing) |
+| `select_package` | User clicks plan CTA | `page.tsx` (landing) |
+| `cta_click` | Generic CTA clicked (hero, nav) | `page.tsx` (landing) |
+| `sign_up_start` | Register form mounted | `register-form.tsx` |
+| `sign_up_submit` | Register form submitted (before API) | `register-form.tsx` |
+| `sign_up` | Account created (API success) | `register-form.tsx` |
+| `login` | Successful login (API success) | `login-form.tsx` |
+| `add_to_cart` | Upgrade button clicked (before checkout) | `upgrade-modal.tsx`, `settings/page.tsx` |
+| `begin_checkout` | Stripe checkout URL received (before redirect) | `upgrade-modal.tsx`, `settings/page.tsx` |
+
+### Purchase Event (Special)
+
+- Fires only after Stripe confirms payment, NOT on button click
+- Stripe success URL redirects to `/dashboard?checkout=success`
+- Dashboard fetches `GET /api/latest-purchase` for transaction details
+- Deduplicated by `transactionId` in `localStorage` (`gtm_fired_purchases`)
+- All `event_id` values use `crypto.randomUUID()`
+- **Note:** `?upgraded=true` has been replaced by `?checkout=success`
 
 ## Monitoring (Sentry)
 
@@ -584,7 +622,7 @@ All cards use the `.card-glow` CSS class defined in `globals.css`:
 ## Legal Pages
 
 - `/terms` — Terms of Service (effective March 26, 2026), server-rendered, public, SEO indexable. T&C adjusted to only reference live platform features — no unbuilt promises.
-- `/privacy` — **BLOCKED: waiting for Termly embed code from client.** Currently shows placeholder. Required for Google Ads.
+- `/privacy` — Termly privacy policy (HTML embed), server-rendered, public, SEO indexable. Live and ready for Google Ads.
 - Both linked from: landing page footer, app sidebar footer
 - Consent lines present on: register form, upgrade modal, settings upgrade button
 - Contact email: `team@cloutiq.ai` (NOT `hello@cloutiq.ai`)
