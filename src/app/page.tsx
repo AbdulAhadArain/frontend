@@ -225,7 +225,7 @@ export default function LandingPage() {
           <span className='nav-link' onClick={() => scrollTo('features')}>
             Features
           </span>
-          <span className='nav-link' onClick={() => scrollTo('pricing')}>
+          <span className='nav-link' onClick={() => scrollTo('creator-plan')}>
             Pricing
           </span>
           <span className='nav-link' onClick={() => scrollTo('agencies')}>
@@ -903,7 +903,7 @@ export default function LandingPage() {
             </div>
 
             {/* Creator */}
-            <div className='pricing-card featured'>
+            <div id='creator-plan' className='pricing-card featured'>
               <div className='p-tier'>Creator</div>
               <div className='p-price'>
                 $10<span>/mo</span>

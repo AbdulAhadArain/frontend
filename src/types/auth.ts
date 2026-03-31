@@ -42,6 +42,20 @@ export interface AuthTokens {
   mustChangeCredentials: boolean;
 }
 
+export interface VerificationPendingResponse {
+  status: 'verification_pending';
+  message: string;
+  email: string;
+}
+
+export type LoginResponse = AuthTokens | VerificationPendingResponse;
+
+export function isVerificationPending(
+  data: LoginResponse
+): data is VerificationPendingResponse {
+  return 'status' in data && data.status === 'verification_pending';
+}
+
 export interface LoginRequest {
   email: string;
   password: string;

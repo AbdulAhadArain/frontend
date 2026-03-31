@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -21,7 +21,7 @@ import {
   setAuthCookies,
   setMustChangeCookie,
   setRefreshTokenCookie,
-  clearAuthCookies
+  getRefreshTokenCookie
 } from '@/lib/auth-cookie';
 import { identifyUser, trackUserLoggedIn } from '@/lib/analytics';
 import { pushToDataLayer, generateEventId } from '@/lib/gtm';
@@ -29,8 +29,10 @@ import type {
   ApiErrorResponse,
   ApiSuccessResponse,
   AuthTokens,
+  LoginResponse,
   User
 } from '@/types/auth';
+import { isVerificationPending } from '@/types/auth';
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -47,11 +49,15 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  // Clear any stale auth state from previous session on mount
-  useState(() => {
-    useAuthStore.getState().logout();
-    clearAuthCookies();
-  });
+  // If user is already authenticated (e.g. browser back from dashboard),
+  // redirect them back instead of clearing their session
+  useEffect(() => {
+    const rt = getRefreshTokenCookie();
+    if (rt) {
+      const dest = redirectTo;
+      window.location.href = dest;
+    }
+  }, [redirectTo]);
 
   const {
     register,
@@ -106,11 +112,18 @@ export function LoginForm() {
 
   async function onSubmit(formData: LoginFormData) {
     try {
-      const response = await apiClient.post<ApiSuccessResponse<AuthTokens>>(
+      const response = await apiClient.post<ApiSuccessResponse<LoginResponse>>(
         '/auth/login',
         formData
       );
-      await handleAuthSuccess(response.data.data, 'email');
+      const data = response.data.data;
+
+      if (isVerificationPending(data)) {
+        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        return;
+      }
+
+      await handleAuthSuccess(data, 'email');
     } catch (error) {
       const axiosError = error as AxiosError<ApiErrorResponse>;
       const message =

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,7 +20,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import {
   setAuthCookies,
   setRefreshTokenCookie,
-  clearAuthCookies
+  getRefreshTokenCookie
 } from '@/lib/auth-cookie';
 import { identifyUser, trackSignUp } from '@/lib/analytics';
 import { pushToDataLayer, generateEventId } from '@/lib/gtm';
@@ -27,8 +28,10 @@ import type {
   ApiErrorResponse,
   ApiSuccessResponse,
   AuthTokens,
+  LoginResponse,
   User
 } from '@/types/auth';
+import { isVerificationPending } from '@/types/auth';
 
 const registerSchema = z
   .object({
@@ -38,7 +41,12 @@ const registerSchema = z
       .string()
       .min(8, 'Password must be at least 8 characters')
       .regex(/[A-Z]/, 'Password must contain at least 1 uppercase letter')
-      .regex(/[0-9]/, 'Password must contain at least 1 number'),
+      .regex(/[a-z]/, 'Password must contain at least 1 lowercase letter')
+      .regex(/[0-9]/, 'Password must contain at least 1 number')
+      .regex(
+        /[^A-Za-z0-9]/,
+        'Password must contain at least 1 special character'
+      ),
     confirmPassword: z.string().min(1, 'Confirm your password')
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -49,15 +57,19 @@ const registerSchema = z
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  // Clear any stale auth state from previous session on mount
-  useState(() => {
-    useAuthStore.getState().logout();
-    clearAuthCookies();
-  });
+  // If user is already authenticated (e.g. browser back from dashboard),
+  // redirect them back instead of clearing their session
+  useEffect(() => {
+    const rt = getRefreshTokenCookie();
+    if (rt) {
+      window.location.href = '/dashboard';
+    }
+  }, []);
 
   // sign_up_start on mount
   useEffect(() => {
@@ -120,7 +132,7 @@ export function RegisterForm() {
       form_id: 'signup_form'
     });
     try {
-      const response = await apiClient.post<ApiSuccessResponse<AuthTokens>>(
+      const response = await apiClient.post<ApiSuccessResponse<LoginResponse>>(
         '/auth/register',
         {
           name: formData.name,
@@ -128,12 +140,23 @@ export function RegisterForm() {
           password: formData.password
         }
       );
-      await handleAuthSuccess(response.data.data, 'email');
+      const data = response.data.data;
+
+      if (isVerificationPending(data)) {
+        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        return;
+      }
+
+      await handleAuthSuccess(data, 'email');
     } catch (error) {
       const axiosError = error as AxiosError<ApiErrorResponse>;
-      const message =
+      const raw =
         axiosError.response?.data?.message?.[0] ||
         'Registration failed. Please try again.';
+      const message =
+        raw.toLowerCase().includes('password is not strong enough')
+          ? 'Password must be at least 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character.'
+          : raw;
       toast.error(message);
     }
   }
