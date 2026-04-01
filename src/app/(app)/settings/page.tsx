@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
-import { IconEye, IconEyeOff, IconLoader2 } from '@tabler/icons-react';
+import { IconEye, IconEyeOff, IconLoader2, IconPencil } from '@tabler/icons-react';
 import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,6 @@ import { useAuthStore } from '@/stores/auth.store';
 import apiClient from '@/lib/api-client';
 import { identifyUser } from '@/lib/analytics';
 import { OnboardingModal } from '@/features/onboarding/components/onboarding-modal';
-import type { OnboardingData } from '@/features/onboarding/types/onboarding';
 import {
   Dialog,
   DialogContent,
@@ -93,106 +92,117 @@ export default function SettingsPage() {
         Settings
       </h1>
 
-      {/* Profile section */}
-      <div className='card-glow mb-6 p-6'>
-        <h2 className='mb-4 font-heading text-lg font-bold text-foreground'>
-          Profile
-        </h2>
-        <div className='grid gap-3'>
-          <div>
-            <Label className='text-muted-foreground'>Name</Label>
-            <p className='text-sm text-foreground'>{user?.name || '—'}</p>
+      {/* ── Card 1: Account ────────────────────────────── */}
+      <div className='card-glow mb-6'>
+        {/* Header row: avatar + name/email + plan badge */}
+        <div className='flex items-center gap-4 border-b border-border/50 p-6'>
+          <div className='flex size-12 shrink-0 items-center justify-center rounded-sm bg-primary/10'>
+            <span className='font-heading text-lg font-bold text-primary'>
+              {user?.name?.slice(0, 2).toUpperCase() || 'CQ'}
+            </span>
           </div>
-          <div>
-            <Label className='text-muted-foreground'>Email</Label>
-            <p className='text-sm text-foreground'>{user?.email || '—'}</p>
-          </div>
-          <div className='flex items-center gap-2'>
-            <Label className='text-muted-foreground'>Plan</Label>
-            {user?.plan === 'FREE' && (
-              <Badge
-                variant='outline'
-                className='border-score-mid text-score-mid'
-              >
-                FREE
-              </Badge>
-            )}
-            {user?.plan === 'CREATOR' && (
-              <Badge className='bg-primary text-primary-foreground'>
-                CREATOR
-              </Badge>
-            )}
-            {user?.role === 'ADMIN' && (
-              <Badge variant='outline' className='border-primary text-primary'>
-                ADMIN
-              </Badge>
-            )}
+          <div className='min-w-0 flex-1'>
+            <div className='flex items-center gap-2'>
+              <h2 className='truncate font-heading text-lg font-bold text-foreground'>
+                {user?.name || '—'}
+              </h2>
+              {user?.role === 'ADMIN' && (
+                <Badge variant='outline' className='shrink-0 border-primary text-primary'>
+                  ADMIN
+                </Badge>
+              )}
+              {user?.plan === 'CREATOR' && (
+                <Badge className='shrink-0 bg-primary text-primary-foreground'>
+                  CREATOR
+                </Badge>
+              )}
+              {user?.plan === 'FREE' && (
+                <Badge
+                  variant='outline'
+                  className='shrink-0 border-score-mid text-score-mid'
+                >
+                  FREE
+                </Badge>
+              )}
+            </div>
+            <p className='truncate font-mono text-xs text-muted-foreground'>
+              {user?.email || '—'}
+            </p>
           </div>
           {user?.plan === 'FREE' && (
-            <p className='text-xs text-muted-foreground'>
-              {user.analysesThisMonth}/3 analyses used this month
-            </p>
+            <div className='hidden shrink-0 text-right sm:block'>
+              <p className='font-mono text-sm font-medium text-foreground'>
+                {user.analysesThisMonth}/3
+              </p>
+              <p className='font-mono text-[10px] text-muted-foreground'>
+                analyses this month
+              </p>
+            </div>
           )}
         </div>
+
+        {/* Creator profile fields — non-admin only */}
+        {!isAdmin && user && (
+          <div className='p-6'>
+            <div className='mb-3 flex items-center justify-between'>
+              <p className='font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground'>
+                Creator Profile
+              </p>
+              <Button
+                variant='ghost'
+                size='sm'
+                className='h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground'
+                onClick={() => setShowProfileEdit(true)}
+              >
+                <IconPencil className='size-3' />
+                Edit
+              </Button>
+            </div>
+            <div className='grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-3'>
+              {PROFILE_FIELDS.map((field) => (
+                <div key={field}>
+                  <p className='text-[11px] text-muted-foreground'>
+                    {PROFILE_LABELS[field]}
+                  </p>
+                  <p className='text-sm font-medium text-foreground capitalize'>
+                    {(user[field as keyof typeof user] as string)
+                      ?.replace(/_/g, ' ')
+                      .toLowerCase() || '—'}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <OnboardingModal
+              open={showProfileEdit}
+              onClose={() => setShowProfileEdit(false)}
+              initialData={{
+                platform: user.platform,
+                niche: user.niche,
+                audienceAgeRange: user.audienceAgeRange,
+                audienceRegion: user.audienceRegion,
+                audienceLanguage: user.audienceLanguage,
+                averageViewCount: user.averageViewCount,
+                biggestFrustration: user.biggestFrustration
+              }}
+              onComplete={handleProfileComplete}
+            />
+          </div>
+        )}
       </div>
 
-      {/* Creator Profile section — non-admin only */}
-      {!isAdmin && user && (
-        <div className='card-glow mb-6 p-6'>
-          <div className='mb-4 flex items-center justify-between'>
-            <h2 className='font-heading text-lg font-bold text-foreground'>
-              Creator Profile
-            </h2>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => setShowProfileEdit(true)}
-            >
-              Edit Profile
-            </Button>
-          </div>
-          <div className='grid gap-3'>
-            {PROFILE_FIELDS.map((field) => (
-              <div key={field}>
-                <Label className='text-muted-foreground'>
-                  {PROFILE_LABELS[field]}
-                </Label>
-                <p className='text-sm text-foreground capitalize'>
-                  {(user[field as keyof typeof user] as string) || '—'}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <OnboardingModal
-            open={showProfileEdit}
-            onClose={() => setShowProfileEdit(false)}
-            initialData={{
-              platform: user.platform,
-              niche: user.niche,
-              audienceAgeRange: user.audienceAgeRange,
-              audienceRegion: user.audienceRegion,
-              audienceLanguage: user.audienceLanguage,
-              averageViewCount: user.averageViewCount,
-              biggestFrustration: user.biggestFrustration
-            }}
-            onComplete={handleProfileComplete}
-          />
+      {/* ── Card 2: Plan & Billing — non-admin only ──── */}
+      {!isAdmin && (
+        <div className='card-glow mb-6'>
+          <SubscriptionSection user={user} onRefresh={refreshUser} />
+          <BillingHistorySection />
         </div>
       )}
 
-      {/* Subscription section — non-admin only */}
-      {!isAdmin && (
-        <SubscriptionSection user={user} onRefresh={refreshUser} />
-      )}
-
-      {/* Billing History — non-admin only */}
-      {!isAdmin && <BillingHistorySection />}
-
-      {/* Password section */}
+      {/* ── Card 3: Security ───────────────────────────── */}
       <div className='card-glow p-6'>
         <h2 className='mb-4 font-heading text-lg font-bold text-foreground'>
-          Password
+          Security
         </h2>
         {hasPassword ? (
           <ChangePasswordForm />
@@ -367,73 +377,72 @@ function SubscriptionSection({
   }
 
   return (
-    <div className='card-glow mb-6 p-6'>
+    <div className='p-6'>
       <h2 className='mb-4 font-heading text-lg font-bold text-foreground'>
-        Subscription
+        Plan & Billing
       </h2>
 
       {/* Active */}
       {status === 'active' && (
         <div className='flex flex-col gap-3'>
-          <div className='flex items-center gap-2'>
-            <Badge className='bg-primary text-primary-foreground'>
-              Creator
-            </Badge>
-            <span className='text-sm text-muted-foreground'>$10/month</span>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-2'>
+              <Badge className='bg-primary text-primary-foreground'>
+                Creator
+              </Badge>
+              <span className='text-sm text-muted-foreground'>$10/month</span>
+            </div>
+            <Button
+              variant='ghost'
+              size='sm'
+              className='h-7 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive'
+              onClick={() => setShowCancelModal(true)}
+            >
+              Cancel
+            </Button>
           </div>
           {formattedDate && (
-            <p className='text-sm text-muted-foreground'>
-              Next billing date: <span className='text-foreground'>{formattedDate}</span>
+            <p className='text-xs text-muted-foreground'>
+              Next billing: <span className='text-foreground'>{formattedDate}</span>
             </p>
           )}
-          <Button
-            variant='outline'
-            size='sm'
-            className='w-fit border-destructive text-destructive hover:bg-destructive/10'
-            onClick={() => setShowCancelModal(true)}
-          >
-            Cancel Subscription
-          </Button>
         </div>
       )}
 
       {/* Canceling */}
       {status === 'canceling' && (
         <div className='flex flex-col gap-3'>
-          <div className='flex items-center gap-2'>
+          <div className='flex items-center justify-between'>
             <Badge variant='outline' className='border-score-mid text-score-mid'>
               Creator (canceling)
             </Badge>
+            <Button
+              variant='outline'
+              size='sm'
+              className='h-7 text-xs'
+              onClick={() => setShowResumeModal(true)}
+            >
+              Resume
+            </Button>
           </div>
           {formattedDate && (
-            <>
-              <p className='text-sm text-muted-foreground'>
-                Access until: <span className='text-foreground'>{formattedDate}</span>
-              </p>
-              <p className='text-xs text-score-mid'>
-                Your plan will not renew. You&apos;ll be moved to Free on {formattedDate}.
-              </p>
-            </>
+            <p className='text-xs text-score-mid'>
+              Access until {formattedDate} — will not renew.
+            </p>
           )}
-          <Button
-            variant='outline'
-            size='sm'
-            className='w-fit'
-            onClick={() => setShowResumeModal(true)}
-          >
-            Resume Subscription
-          </Button>
         </div>
       )}
 
       {/* Free / no subscription */}
       {!status && (
         <div className='flex flex-col gap-3'>
-          <div className='flex items-center gap-2'>
-            <Badge variant='outline' className='border-score-mid text-score-mid'>
-              Free
-            </Badge>
-            <span className='text-sm text-muted-foreground'>3 analyses/month</span>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-2'>
+              <Badge variant='outline' className='border-score-mid text-score-mid'>
+                Free
+              </Badge>
+              <span className='text-sm text-muted-foreground'>3 analyses/month</span>
+            </div>
           </div>
           <Button size='sm' className='w-fit' onClick={handleUpgrade} disabled={loading}>
             {loading ? (
@@ -538,11 +547,8 @@ function BillingHistorySection() {
 
   if (loading) {
     return (
-      <div className='card-glow mb-6 p-6'>
-        <h2 className='mb-4 font-heading text-lg font-bold text-foreground'>
-          Billing History
-        </h2>
-        <p className='text-sm text-muted-foreground'>Loading...</p>
+      <div className='border-t border-border/50 px-6 py-4'>
+        <p className='text-sm text-muted-foreground'>Loading billing history...</p>
       </div>
     );
   }
@@ -550,10 +556,10 @@ function BillingHistorySection() {
   if (history.length === 0) return null;
 
   return (
-    <div className='card-glow mb-6 p-6'>
-      <h2 className='mb-4 font-heading text-lg font-bold text-foreground'>
+    <div className='border-t border-border/50 px-6 pb-6 pt-4'>
+      <p className='mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground'>
         Billing History
-      </h2>
+      </p>
       <div className='overflow-hidden rounded-sm border border-border'>
         {/* Desktop header */}
         <div className='hidden grid-cols-[120px_1fr_80px] border-b border-border bg-muted/30 px-4 py-2 sm:grid'>
