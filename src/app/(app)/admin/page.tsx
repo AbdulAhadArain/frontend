@@ -631,7 +631,7 @@ export default function AdminPage() {
                       This Month
                     </th> */}
                     <th className='px-5 py-3 text-left font-mono text-xs uppercase tracking-wider text-muted-foreground'>
-                      Total
+                      Total analysis
                     </th>
                     <th className='px-5 py-3 text-left font-mono text-xs uppercase tracking-wider text-muted-foreground'>
                       Joined
