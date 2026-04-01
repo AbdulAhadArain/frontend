@@ -89,11 +89,12 @@ export default function SettingsPage() {
 
   return (
     <div className='flex-1 p-4 sm:p-6 md:p-8'>
-      <h1 className='mb-6 font-heading text-2xl font-bold text-foreground'>
-        Settings
-      </h1>
-
       {/* ── Card 1: Account ────────────────────────────── */}
+      <div className='mx-auto mb-6 max-w-[1022px]'>
+        <h1 className='font-heading text-2xl font-bold text-foreground'>
+          Settings
+        </h1>
+      </div>
       <div className='card-glow mx-auto mb-6 max-w-[1022px]'>
         {/* Header row: avatar + name/email + plan badge */}
         <div className='flex items-center gap-4 border-b border-border/50 p-6'>
