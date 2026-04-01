@@ -309,22 +309,31 @@ function SubscriptionSection({
     ? format(new Date(endDate), 'MMM d, yyyy')
     : null;
 
-  async function handleCancel() {
-    setLoading(true);
-    try {
-      await apiClient.post('/api/cancel-subscription');
-      toast.success(`Your subscription will end on ${formattedDate}`);
-      await onRefresh();
-    } catch (error) {
-      const msg =
-        (error as AxiosError<ApiErrorResponse>).response?.data?.message?.[0] ||
-        'Failed to cancel subscription';
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-      setShowCancelModal(false);
-    }
+async function handleCancel() {
+  setLoading(true);
+  try {
+    const { data } = await apiClient.post('/api/cancel-subscription');
+    const accessUntil = data?.data?.accessUntil ?? data?.accessUntil;
+    const formatted = accessUntil
+      ? new Date(accessUntil).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+      : formattedDate; // fallback to whatever was already computed
+
+    await onRefresh();
+    toast.success(`Your subscription will end on ${formatted}`);
+  } catch (error) {
+    const msg =
+      (error as AxiosError<ApiErrorResponse>).response?.data?.message?.[0] ||
+      'Failed to cancel subscription';
+    toast.error(msg);
+  } finally {
+    setLoading(false);
+    setShowCancelModal(false);
   }
+}
 
   async function handleResume() {
     setLoading(true);
