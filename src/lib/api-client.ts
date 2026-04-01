@@ -3,7 +3,11 @@ import axios, {
   InternalAxiosRequestConfig
 } from 'axios';
 import { useAuthStore } from '@/stores/auth.store';
-import { setRefreshTokenCookie, clearAuthCookies } from '@/lib/auth-cookie';
+import {
+  setRefreshTokenCookie,
+  clearAuthCookies,
+  getRefreshTokenCookie
+} from '@/lib/auth-cookie';
 import type { ApiErrorResponse } from '@/types/auth';
 
 // Route API calls through Next.js rewrite proxy (/backend/*)
@@ -82,7 +86,10 @@ apiClient.interceptors.response.use(
 
     const { refreshToken, setTokens, logout } = useAuthStore.getState();
 
-    if (!refreshToken) {
+    // Fall back to cookie when Zustand is empty (e.g. hard navigation / page refresh)
+    const tokenForRefresh = refreshToken || getRefreshTokenCookie();
+
+    if (!tokenForRefresh) {
       logout();
       clearAuthCookies();
       if (typeof window !== 'undefined') {
@@ -94,7 +101,7 @@ apiClient.interceptors.response.use(
     try {
       const response = await axios.post(
         '/backend/auth/refresh',
-        { refreshToken }
+        { refreshToken: tokenForRefresh }
       );
 
       const { accessToken: newAccessToken, refreshToken: newRefreshToken } =

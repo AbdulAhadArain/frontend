@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const AUTH_COOKIE = 'cloutiq_auth';
 const ROLE_COOKIE = 'cloutiq_role';
 const MUST_CHANGE_COOKIE = 'cloutiq_must_change';
+const REFRESH_TOKEN_COOKIE = 'cloutiq_rt';
 
 // Routes that require authentication
 const protectedRoutes = ['/dashboard', '/history', '/settings', '/admin'];
@@ -11,13 +12,23 @@ const protectedRoutes = ['/dashboard', '/history', '/settings', '/admin'];
 const adminRoutes = ['/admin'];
 
 // Routes that should redirect to dashboard if already authenticated
-const authRoutes = ['/login', '/register'];
+const authRoutes = [
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/verify-email'
+];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAuthenticated = request.cookies.get(AUTH_COOKIE)?.value === '1';
+  const hasRefreshToken = !!request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
   const userRole = request.cookies.get(ROLE_COOKIE)?.value;
   const mustChange = request.cookies.get(MUST_CHANGE_COOKIE)?.value === '1';
+
+  // Consider user authenticated if either the auth flag or refresh token exists
+  const hasSession = isAuthenticated || hasRefreshToken;
 
   // Check if current path matches any protected route
   const isProtectedRoute = protectedRoutes.some(
@@ -29,7 +40,7 @@ export function middleware(request: NextRequest) {
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 
-  // Check if current path is an auth route (login/register)
+  // Check if current path is an auth route (login/register/forgot/reset/verify)
   const isAuthRoute = authRoutes.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
@@ -37,7 +48,7 @@ export function middleware(request: NextRequest) {
   const isChangeCredentials = pathname === '/change-credentials';
 
   // Redirect unauthenticated users away from protected routes
-  if (isProtectedRoute && !isAuthenticated) {
+  if (isProtectedRoute && !hasSession) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
@@ -52,7 +63,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Role-based route restrictions
-  if (isProtectedRoute && isAuthenticated && !mustChange) {
+  if (isProtectedRoute && hasSession && !mustChange) {
     const isUserRoute = ['/dashboard', '/history'].some(
       (r) => pathname === r || pathname.startsWith(`${r}/`)
     );
@@ -68,8 +79,8 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Redirect authenticated users away from auth pages
-  if (isAuthRoute && isAuthenticated) {
+  // Redirect authenticated users away from auth pages (login/register/forgot/reset/verify)
+  if (isAuthRoute && hasSession) {
     if (mustChange) {
       return NextResponse.redirect(
         new URL('/change-credentials', request.url)
@@ -80,7 +91,7 @@ export function middleware(request: NextRequest) {
   }
 
   // /change-credentials requires auth but not mustChange check
-  if (isChangeCredentials && !isAuthenticated) {
+  if (isChangeCredentials && !hasSession) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
@@ -95,6 +106,9 @@ export const config = {
     '/admin/:path*',
     '/login',
     '/register',
+    '/forgot-password',
+    '/reset-password',
+    '/verify-email',
     '/change-credentials'
   ]
 };

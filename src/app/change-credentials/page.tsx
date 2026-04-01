@@ -81,7 +81,7 @@ export default function ChangeCredentialsPage() {
       } catch {}
 
       toast.success('Credentials updated. Welcome to CloutIQ.');
-      router.push('/dashboard');
+      router.replace('/dashboard');
     } catch (error) {
       const axiosError = error as AxiosError<ApiErrorResponse>;
       const message =

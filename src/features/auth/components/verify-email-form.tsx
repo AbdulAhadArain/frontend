@@ -93,10 +93,10 @@ export function VerifyEmailForm() {
             });
           } catch {}
           const dest = u.role === 'ADMIN' ? '/admin' : '/dashboard';
-          window.location.href = dest;
+          window.location.replace(dest);
         } catch {
           setAuthCookies('USER');
-          window.location.href = '/dashboard';
+          window.location.replace('/dashboard');
         }
       } catch (error) {
         const axiosError = error as AxiosError<ApiErrorResponse>;

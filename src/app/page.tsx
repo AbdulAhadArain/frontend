@@ -6,9 +6,16 @@ import { AxiosError } from 'axios';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 
+import axios from 'axios';
 import apiClient from '@/lib/api-client';
 import { pushToDataLayer } from '@/lib/gtm';
-import { getRefreshTokenCookie } from '@/lib/auth-cookie';
+import {
+  getRefreshTokenCookie,
+  setRefreshTokenCookie,
+  setAuthCookies,
+  clearAuthCookies
+} from '@/lib/auth-cookie';
+import { useAuthStore } from '@/stores/auth.store';
 import type { ApiErrorResponse } from '@/types/auth';
 import '@/styles/landing.css';
 
@@ -70,27 +77,61 @@ export default function LandingPage() {
   const [ctaLoading, setCtaLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userPlan, setUserPlan] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const storeUser = useAuthStore((s) => s.user);
 
-  // Check auth state for nav buttons + fetch plan
+  // Sync from Zustand store when it hydrates (e.g. after silent refresh)
+  useEffect(() => {
+    if (storeUser) {
+      setIsLoggedIn(true);
+      setUserPlan(storeUser.plan);
+      setUserRole(storeUser.role);
+    }
+  }, [storeUser]);
+
+  // Check auth state for nav buttons + fetch plan/role
+  // Uses raw axios to avoid apiClient's global logout interceptor on this public page
   useEffect(() => {
     const rt = getRefreshTokenCookie();
-    if (rt) {
-      setIsLoggedIn(true);
-      // Fetch plan to conditionally hide pricing for CREATOR users
-      apiClient
-        .get('/auth/who-am-i')
-        .then((res) => setUserPlan(res.data?.data?.plan || null))
-        .catch(() => {});
-    }
+    if (!rt) return;
 
-    function handlePageShow(e: PageTransitionEvent) {
-      if (e.persisted) {
-        const rt = getRefreshTokenCookie();
-        setIsLoggedIn(!!rt);
+    setIsLoggedIn(true);
+
+    async function fetchProfile() {
+      try {
+        // Refresh to get an access token (Zustand is empty after hard navigation)
+        const refreshRes = await axios.post('/backend/auth/refresh', {
+          refreshToken: rt
+        });
+        const { accessToken, refreshToken: newRt } = refreshRes.data.data;
+        setRefreshTokenCookie(newRt);
+        setAuthCookies(refreshRes.data.data.role || 'USER');
+
+        // Hydrate Zustand so subsequent apiClient calls work
+        const store = useAuthStore.getState();
+        store.setTokens(accessToken, newRt);
+
+        const whoRes = await axios.get('/backend/auth/who-am-i', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Cache-Control': 'no-store'
+          }
+        });
+        const u = whoRes.data?.data;
+        if (u) {
+          setUserPlan(u.plan || null);
+          setUserRole(u.role || null);
+          setAuthCookies(u.role);
+          store.setUser(u);
+        }
+      } catch {
+        // Refresh token expired or invalid — clear stale auth state silently
+        setIsLoggedIn(false);
+        clearAuthCookies();
+        useAuthStore.getState().logout();
       }
     }
-    window.addEventListener('pageshow', handlePageShow);
-    return () => window.removeEventListener('pageshow', handlePageShow);
+    fetchProfile();
   }, []);
 
   // refs for animated elements
@@ -275,7 +316,7 @@ export default function LandingPage() {
             </button>
           </div>
           {isLoggedIn ? (
-            <Link href='/dashboard' className='btn-primary'>
+            <Link href={userRole === 'ADMIN' ? '/admin' : '/dashboard'} className='btn-primary'>
               Dashboard &rarr;
             </Link>
           ) : (
@@ -880,8 +921,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── PRICING — hidden for CREATOR users ── */}
-      {userPlan !== 'CREATOR' && (
+      {/* ── PRICING — hidden for CREATOR/ADMIN users ── */}
+      {userRole !== 'ADMIN' && userPlan !== 'CREATOR' && (
       <section
         id='pricing'
         style={{ borderBottom: '1px solid var(--border)' }}

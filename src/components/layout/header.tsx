@@ -34,7 +34,7 @@ export default function Header() {
     storeLogout();
     clearAuthCookies();
     // Full page load to clear Next.js Router Cache so next login starts fresh
-    window.location.href = '/login';
+    window.location.replace('/');
   }
 
   return (

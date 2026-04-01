@@ -24,6 +24,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const restoreAttempted = useRef(false);
+  const historyTrapped = useRef(false);
 
   useEffect(() => {
     // Only attempt restore once to avoid loops
@@ -101,6 +102,25 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     restoreSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Prevent browser back button from navigating away from the app.
+  // login/register use window.location.replace() which removes the auth page
+  // from history, but the entry *before* it (e.g. landing page or Google) remains.
+  // The popstate listener intercepts browser back/forward and re-pushes the
+  // current URL, keeping the user inside the app. This does NOT affect Next.js
+  // client-side navigation (<Link>, router.push) since those use pushState
+  // directly without triggering popstate.
+  useEffect(() => {
+    if (!ready || !user || historyTrapped.current) return;
+    historyTrapped.current = true;
+    window.history.pushState(null, '', window.location.href);
+
+    function handlePopstate() {
+      window.history.pushState(null, '', window.location.href);
+    }
+    window.addEventListener('popstate', handlePopstate);
+    return () => window.removeEventListener('popstate', handlePopstate);
+  }, [ready, user]);
 
   // Client-side role guard: admin cannot access /dashboard or /history
   useEffect(() => {

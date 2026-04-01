@@ -67,6 +67,7 @@ export default function SettingsPage() {
   const { user, setUser } = useAuthStore();
   const [hasPassword, setHasPassword] = useState(user?.hasPassword ?? !user?.googleId);
   const [showProfileEdit, setShowProfileEdit] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
   const isAdmin = user?.role === 'ADMIN';
 
@@ -189,7 +190,46 @@ export default function SettingsPage() {
             />
           </div>
         )}
+
+        {/* Password button inside account card */}
+        <div className='border-t border-border/50 px-6 py-4'>
+          <Button
+            variant='outline'
+            size='sm'
+            className='h-8 text-xs'
+            onClick={() => setShowPasswordDialog(true)}
+          >
+            {hasPassword ? 'Change Password' : 'Set Password'}
+          </Button>
+        </div>
       </div>
+
+      {/* Password Dialog */}
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent className='rounded-sm'>
+          <DialogHeader>
+            <DialogTitle>
+              {hasPassword ? 'Change Password' : 'Set Password'}
+            </DialogTitle>
+          </DialogHeader>
+          {hasPassword ? (
+            <ChangePasswordForm
+              onSuccess={() => {
+                setShowPasswordDialog(false);
+                toast.success('Password updated successfully');
+              }}
+            />
+          ) : (
+            <SetPasswordForm
+              onSuccess={() => {
+                setHasPassword(true);
+                setShowPasswordDialog(false);
+                toast.success('Password updated successfully');
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* ── Card 2: Plan & Billing — non-admin only ──── */}
       {!isAdmin && (
@@ -198,23 +238,15 @@ export default function SettingsPage() {
           <BillingHistorySection />
         </div>
       )}
-
-      {/* ── Card 3: Security ───────────────────────────── */}
-      <div className='card-glow p-6'>
-        <h2 className='mb-4 font-heading text-lg font-bold text-foreground'>
-          Security
-        </h2>
-        {hasPassword ? (
-          <ChangePasswordForm />
-        ) : (
-          <SetPasswordForm onSuccess={() => setHasPassword(true)} />
-        )}
-      </div>
     </div>
   );
 }
 
-function ChangePasswordForm() {
+interface ChangePasswordFormProps {
+  onSuccess?: () => void;
+}
+
+function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
   const [show, setShow] = useState({ old: false, new: false });
   const {
     register,
@@ -226,8 +258,8 @@ function ChangePasswordForm() {
   async function onSubmit(data: { oldPassword: string; newPassword: string }) {
     try {
       await apiClient.patch('/auth/change-password', data);
-      toast.success('Password changed successfully');
       reset();
+      onSuccess?.();
     } catch (error) {
       const msg =
         (error as AxiosError<ApiErrorResponse>).response?.data?.message?.[0] ||
@@ -536,9 +568,12 @@ async function handleCancel() {
 
 // ── Billing History Section ──────────────────────────────────
 
+const BILLING_PAGE_SIZE = 10;
+
 function BillingHistorySection() {
   const [history, setHistory] = useState<BillingHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     async function fetchHistory() {
@@ -564,6 +599,12 @@ function BillingHistorySection() {
 
   if (history.length === 0) return null;
 
+  const totalPages = Math.ceil(history.length / BILLING_PAGE_SIZE);
+  const pageEntries = history.slice(
+    page * BILLING_PAGE_SIZE,
+    (page + 1) * BILLING_PAGE_SIZE
+  );
+
   return (
     <div className='border-t border-border/50 px-6 pb-6 pt-4'>
       <p className='mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground'>
@@ -583,10 +624,10 @@ function BillingHistorySection() {
           </span>
         </div>
         {/* Rows */}
-        {history.map((entry) => {
-          let formattedDate = entry.date;
+        {pageEntries.map((entry) => {
+          let fmtDate = entry.date;
           try {
-            formattedDate = format(new Date(entry.date), 'MMM d, yyyy');
+            fmtDate = format(new Date(entry.date), 'MMM d, yyyy');
           } catch {}
 
           return (
@@ -601,7 +642,7 @@ function BillingHistorySection() {
                     {entry.event}
                   </span>
                   <span className='font-mono text-[10px] text-muted-foreground sm:text-xs'>
-                    {formattedDate}
+                    {fmtDate}
                   </span>
                 </div>
                 <span className='hidden text-sm text-foreground capitalize sm:block'>
@@ -617,6 +658,33 @@ function BillingHistorySection() {
           );
         })}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className='mt-3 flex items-center justify-center gap-3'>
+          <Button
+            variant='outline'
+            size='sm'
+            className='h-7 rounded-sm px-3 text-xs'
+            disabled={page === 0}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            Prev
+          </Button>
+          <span className='font-mono text-xs text-muted-foreground'>
+            Page {page + 1} of {totalPages}
+          </span>
+          <Button
+            variant='outline'
+            size='sm'
+            className='h-7 rounded-sm px-3 text-xs'
+            disabled={page >= totalPages - 1}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -633,7 +701,6 @@ function SetPasswordForm({ onSuccess }: { onSuccess: () => void }) {
   async function onSubmit(data: { password: string; confirmPassword: string }) {
     try {
       await apiClient.post('/auth/set-password', data);
-      toast.success('Password set successfully');
       reset();
       onSuccess();
     } catch (error) {

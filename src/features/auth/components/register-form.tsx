@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -19,8 +19,7 @@ import axios from 'axios';
 import { useAuthStore } from '@/stores/auth.store';
 import {
   setAuthCookies,
-  setRefreshTokenCookie,
-  getRefreshTokenCookie
+  setRefreshTokenCookie
 } from '@/lib/auth-cookie';
 import { identifyUser, trackSignUp } from '@/lib/analytics';
 import { pushToDataLayer, generateEventId } from '@/lib/gtm';
@@ -61,26 +60,6 @@ export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isRedirecting, setIsRedirecting] = useState(false);
-
-  // If user is already authenticated (e.g. browser back from dashboard),
-  // replace this history entry so back button skips over register entirely.
-  useEffect(() => {
-    function redirectIfAuthenticated() {
-      const rt = getRefreshTokenCookie();
-      if (rt) {
-        setIsRedirecting(true);
-        window.location.replace('/dashboard');
-      }
-    }
-    redirectIfAuthenticated();
-
-    function handlePageShow(e: PageTransitionEvent) {
-      if (e.persisted) redirectIfAuthenticated();
-    }
-    window.addEventListener('pageshow', handlePageShow);
-    return () => window.removeEventListener('pageshow', handlePageShow);
-  }, []);
 
   // sign_up_start on mount
   useEffect(() => {
@@ -132,7 +111,7 @@ export function RegisterForm() {
       setAuthCookies('USER');
     }
 
-    // Replace history entry so back button doesn't return to register page
+    // Replace login/register from history so back button can't return here
     window.location.replace('/dashboard');
   }
 
@@ -154,7 +133,7 @@ export function RegisterForm() {
       const data = response.data.data;
 
       if (isVerificationPending(data)) {
-        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        router.replace(`/verify-email?email=${encodeURIComponent(data.email)}`);
         return;
       }
 
@@ -197,15 +176,6 @@ export function RegisterForm() {
   }
 
   const isLoading = isSubmitting || isGoogleLoading;
-
-  // Don't flash the register form — show spinner while redirecting
-  if (isRedirecting) {
-    return (
-      <div className='flex min-h-[300px] items-center justify-center'>
-        <div className='size-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
-      </div>
-    );
-  }
 
   return (
     <div className='flex flex-col gap-6 px-4 py-6 sm:p-8'>

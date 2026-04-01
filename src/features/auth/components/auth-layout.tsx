@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
+import { getRefreshTokenCookie } from '@/lib/auth-cookie';
 
 const decorativeScores = [
   { label: 'HOOK', value: 92 },
@@ -21,6 +23,38 @@ interface AuthLayoutProps {
 }
 
 export function AuthLayout({ children }: AuthLayoutProps) {
+  const [redirecting, setRedirecting] = useState(false);
+
+  // If user is already authenticated, redirect away from auth pages.
+  // This is a client-side safety net (middleware handles it server-side).
+  useEffect(() => {
+    const rt = getRefreshTokenCookie();
+    if (rt) {
+      setRedirecting(true);
+      const roleCookie = document.cookie.match(/(?:^|; )cloutiq_role=([^;]*)/);
+      const dest = roleCookie?.[1] === 'ADMIN' ? '/admin' : '/dashboard';
+      window.location.replace(dest);
+    }
+  }, []);
+
+  // If this page is restored from bfcache (e.g. back-button from dashboard),
+  // force a server request so middleware can redirect authenticated users away.
+  useEffect(() => {
+    function handlePageShow(e: PageTransitionEvent) {
+      if (e.persisted) window.location.reload();
+    }
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
+
+  if (redirecting) {
+    return (
+      <div className='fixed inset-0 z-50 flex items-center justify-center bg-background'>
+        <div className='size-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+      </div>
+    );
+  }
+
   return (
     <div className='flex min-h-screen'>
       {/* Left panel — branding + decorative scores */}

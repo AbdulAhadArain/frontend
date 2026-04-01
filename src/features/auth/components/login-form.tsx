@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -20,8 +20,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import {
   setAuthCookies,
   setMustChangeCookie,
-  setRefreshTokenCookie,
-  getRefreshTokenCookie
+  setRefreshTokenCookie
 } from '@/lib/auth-cookie';
 import { identifyUser, trackUserLoggedIn } from '@/lib/analytics';
 import { pushToDataLayer, generateEventId } from '@/lib/gtm';
@@ -48,27 +47,7 @@ export function LoginForm() {
   const { setTokens } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isRedirecting, setIsRedirecting] = useState(false);
   const [googleOnlyError, setGoogleOnlyError] = useState(false);
-
-  // If user is already authenticated (e.g. browser back from dashboard),
-  // replace this history entry so back button skips over login entirely.
-  useEffect(() => {
-    function redirectIfAuthenticated() {
-      const rt = getRefreshTokenCookie();
-      if (rt) {
-        setIsRedirecting(true);
-        window.location.replace(redirectTo);
-      }
-    }
-    redirectIfAuthenticated();
-
-    function handlePageShow(e: PageTransitionEvent) {
-      if (e.persisted) redirectIfAuthenticated();
-    }
-    window.addEventListener('pageshow', handlePageShow);
-    return () => window.removeEventListener('pageshow', handlePageShow);
-  }, [redirectTo]);
 
   const {
     register,
@@ -138,7 +117,7 @@ export function LoginForm() {
       const data = response.data.data;
 
       if (isVerificationPending(data)) {
-        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        router.replace(`/verify-email?email=${encodeURIComponent(data.email)}`);
         return;
       }
 
@@ -178,15 +157,6 @@ export function LoginForm() {
   }
 
   const isLoading = isSubmitting || isGoogleLoading;
-
-  // Don't flash the login form — show spinner while redirecting
-  if (isRedirecting) {
-    return (
-      <div className='flex min-h-[300px] items-center justify-center'>
-        <div className='size-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
-      </div>
-    );
-  }
 
   return (
     <div className='flex flex-col gap-6 px-4 py-6 sm:p-8'>
