@@ -216,15 +216,13 @@ export default function LandingPage() {
     function doScroll() {
       const el = document.getElementById(hash);
       if (!el) return;
-      // Force reveal animation to complete so position is accurate
-      el.classList.add('vis');
-      // Force reflow so getBoundingClientRect reflects translateY(0)
+      // Force ALL reveal animations to complete so layout is stable
+      document.querySelectorAll('.reveal').forEach((r) => r.classList.add('vis'));
+      // Force reflow so getBoundingClientRect reflects final layout
       el.getBoundingClientRect();
       const top = el.getBoundingClientRect().top + window.scrollY - 64;
       window.scrollTo({ top, behavior: 'smooth' });
     }
-    // Use requestIdleCallback to wait until browser is idle after paint,
-    // with a fallback timeout for Safari
     const raf = requestAnimationFrame(() => {
       setTimeout(doScroll, 600);
     });
