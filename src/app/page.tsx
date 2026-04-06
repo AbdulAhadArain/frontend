@@ -213,10 +213,13 @@ export default function LandingPage() {
     if (!hash) return;
     // Suppress browser's native scroll
     window.scrollTo(0, 0);
-    // Wait for fonts, reveals, and layout to stabilize
     function doScroll() {
       const el = document.getElementById(hash);
       if (!el) return;
+      // Force reveal animation to complete so position is accurate
+      el.classList.add('vis');
+      // Force reflow so getBoundingClientRect reflects translateY(0)
+      el.getBoundingClientRect();
       const top = el.getBoundingClientRect().top + window.scrollY - 64;
       window.scrollTo({ top, behavior: 'smooth' });
     }
