@@ -206,6 +206,28 @@ export default function LandingPage() {
     return () => obs.disconnect();
   }, []);
 
+  // handle hash scroll after hydration (e.g. /pricing → /#pricing)
+  // We wait for fonts + reveal animations to settle, then scroll precisely.
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (!hash) return;
+    // Suppress browser's native scroll
+    window.scrollTo(0, 0);
+    // Wait for fonts, reveals, and layout to stabilize
+    function doScroll() {
+      const el = document.getElementById(hash);
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - 64;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+    // Use requestIdleCallback to wait until browser is idle after paint,
+    // with a fallback timeout for Safari
+    const raf = requestAnimationFrame(() => {
+      setTimeout(doScroll, 600);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
   // hero count-up animations
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -287,7 +309,11 @@ export default function LandingPage() {
   );
 
   function scrollTo(id: string) {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    const el = document.getElementById(id);
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - 64;
+    window.scrollTo({ top, behavior: 'smooth' });
+    window.history.replaceState(null, '', `/#${id}`);
   }
 
   return (
@@ -305,7 +331,7 @@ export default function LandingPage() {
           <span className='nav-link' onClick={() => scrollTo('features')}>
             Features
           </span>
-          <span className='nav-link' onClick={() => scrollTo('creator-plan')}>
+          <span className='nav-link' onClick={() => scrollTo('pricing')}>
             Pricing
           </span>
           <span className='nav-link' onClick={() => scrollTo('agencies')}>
@@ -748,14 +774,13 @@ export default function LandingPage() {
 
       {/* ── HOW IT WORKS ── */}
       <section
-        id='how'
         style={{
           background: 'var(--bg2)',
           borderBottom: '1px solid var(--border)'
         }}
       >
         <div className='container'>
-          <div className='reveal'>
+          <div id='how' className='reveal' style={{ scrollMarginTop: '64px' }}>
             <div className='sec-eyebrow'>How it works</div>
             <h2 className='sec-title'>
               From script to production brief
@@ -801,11 +826,10 @@ export default function LandingPage() {
 
       {/* ── FEATURES ── */}
       <section
-        id='features'
         style={{ borderBottom: '1px solid var(--border)' }}
       >
         <div className='container'>
-          <div className='reveal'>
+          <div id='features' className='reveal' style={{ scrollMarginTop: '64px' }}>
             <div className='sec-eyebrow'>What you get</div>
             <h2 className='sec-title'>
               Everything a content strategist
@@ -865,14 +889,13 @@ export default function LandingPage() {
 
       {/* ── WHO IT'S FOR ── */}
       <section
-        id='agencies'
         style={{
           background: 'var(--bg2)',
           borderBottom: '1px solid var(--border)'
         }}
       >
         <div className='container'>
-          <div className='reveal'>
+          <div id='agencies' className='reveal' style={{ scrollMarginTop: '64px' }}>
             <div className='sec-eyebrow'>Who it&apos;s for</div>
             <h2 className='sec-title'>
               Built for creators.
@@ -938,11 +961,10 @@ export default function LandingPage() {
       {/* ── PRICING — hidden for CREATOR/ADMIN users ── */}
       {userRole !== 'ADMIN' && userPlan !== 'CREATOR' && (
       <section
-        id='pricing'
         style={{ borderBottom: '1px solid var(--border)' }}
       >
         <div className='container'>
-          <div className='reveal' style={{ textAlign: 'center' }}>
+          <div id='pricing' className='reveal' style={{ textAlign: 'center', scrollMarginTop: '64px' }}>
             <div className='sec-eyebrow ctr'>Pricing</div>
             <h2 className='sec-title'>
               Simple pricing.

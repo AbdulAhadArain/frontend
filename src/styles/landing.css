@@ -72,6 +72,7 @@
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  scroll-padding-top: 64px;
 }
 
 .landing-page *,

@@ -26,7 +26,7 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import type { ApiErrorResponse, ApiSuccessResponse, User, BillingHistoryEntry } from '@/types/auth';
-import { pushToDataLayer, generateEventId } from '@/lib/gtm';
+import { pushToDataLayer, generateEventId, CREATOR_PLAN_ITEM } from '@/lib/gtm';
 
 const changePasswordSchema = z.object({
   oldPassword: z.string().min(1, 'Current password is required'),
@@ -389,7 +389,9 @@ async function handleCancel() {
       event: 'add_to_cart',
       plan_id: 'creator_monthly',
       package_type: 'paid',
-      value: 10
+      value: 10,
+      currency: 'USD',
+      items: [CREATOR_PLAN_ITEM]
     });
     setLoading(true);
     try {
@@ -401,7 +403,8 @@ async function handleCancel() {
           event_id: generateEventId('checkout'),
           value: 10,
           currency: 'USD',
-          payment_provider: 'stripe'
+          payment_provider: 'stripe',
+          items: [CREATOR_PLAN_ITEM]
         });
         window.location.href = checkoutUrl;
       } else {

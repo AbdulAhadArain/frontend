@@ -15,3 +15,10 @@ export function generateEventId(prefix: string): string {
 }
 
 export const GTM_ID = 'GTM-T6FZ9855';
+
+export const CREATOR_PLAN_ITEM = {
+  item_id: 'creator_monthly',
+  item_name: 'Creator Plan',
+  price: 10,
+  quantity: 1
+};

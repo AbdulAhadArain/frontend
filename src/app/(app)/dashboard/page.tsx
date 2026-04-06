@@ -31,7 +31,7 @@ import { AnalysisResults } from '@/features/analysis/components/analysis-results
 import { UpgradeModal } from '@/features/dashboard/components/upgrade-modal';
 import type { Analysis, AnalysisLanguage } from '@/types/analysis';
 import type { ApiErrorResponse, ApiSuccessResponse, User } from '@/types/auth';
-import { pushToDataLayer, generateEventId } from '@/lib/gtm';
+import { pushToDataLayer, generateEventId, CREATOR_PLAN_ITEM } from '@/lib/gtm';
 
 const languages: { code: AnalysisLanguage; label: string }[] = [
   { code: 'en', label: 'EN' },
@@ -176,7 +176,8 @@ export default function DashboardPage() {
           package_type: 'paid',
           value: purchase.amount,
           currency: purchase.currency,
-          subscription_id: purchase.subscriptionId
+          subscription_id: purchase.subscriptionId,
+          items: [CREATOR_PLAN_ITEM]
         });
 
         firedTxns.push(purchase.transactionId);

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { IconCheck, IconX } from '@tabler/icons-react';
 import apiClient from '@/lib/api-client';
 import { toast } from 'sonner';
-import { pushToDataLayer, generateEventId } from '@/lib/gtm';
+import { pushToDataLayer, generateEventId, CREATOR_PLAN_ITEM } from '@/lib/gtm';
 
 interface UpgradeModalProps {
   open: boolean;
@@ -36,7 +36,9 @@ export function UpgradeModal({
       event: 'add_to_cart',
       plan_id: 'creator_monthly',
       package_type: 'paid',
-      value: 10
+      value: 10,
+      currency: 'USD',
+      items: [CREATOR_PLAN_ITEM]
     });
     setLoading(true);
     try {
@@ -48,7 +50,8 @@ export function UpgradeModal({
           event_id: generateEventId('checkout'),
           value: 10,
           currency: 'USD',
-          payment_provider: 'stripe'
+          payment_provider: 'stripe',
+          items: [CREATOR_PLAN_ITEM]
         });
         window.location.href = checkoutUrl;
       } else {
