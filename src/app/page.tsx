@@ -206,15 +206,21 @@ export default function LandingPage() {
     return () => obs.disconnect();
   }, []);
 
-  // handle hash scroll after hydration (e.g. /pricing → /#pricing)
+  // handle scroll after hydration for clean section URLs (e.g. /pricing, /features)
   // We wait for fonts + reveal animations to settle, then scroll precisely.
   useEffect(() => {
-    const hash = window.location.hash.slice(1);
-    if (!hash) return;
+    const pathToSection: Record<string, string> = {
+      '/pricing': 'pricing',
+      '/features': 'features',
+      '/how-it-works': 'how',
+      '/agencies': 'agencies'
+    };
+    const sectionId = pathToSection[window.location.pathname];
+    if (!sectionId) return;
     // Suppress browser's native scroll
     window.scrollTo(0, 0);
     function doScroll() {
-      const el = document.getElementById(hash);
+      const el = document.getElementById(sectionId);
       if (!el) return;
       // Force ALL reveal animations to complete so layout is stable
       document.querySelectorAll('.reveal').forEach((r) => r.classList.add('vis'));
@@ -309,12 +315,19 @@ export default function LandingPage() {
     [ctaEmail]
   );
 
+  const sectionPathMap: Record<string, string> = {
+    how: '/how-it-works',
+    features: '/features',
+    pricing: '/pricing',
+    agencies: '/agencies'
+  };
+
   function scrollTo(id: string) {
     const el = document.getElementById(id);
     if (!el) return;
     const top = el.getBoundingClientRect().top + window.scrollY - 64;
     window.scrollTo({ top, behavior: 'smooth' });
-    window.history.replaceState(null, '', `/#${id}`);
+    window.history.replaceState(null, '', sectionPathMap[id] || '/');
   }
 
   return (

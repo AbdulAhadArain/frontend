@@ -20,8 +20,21 @@ const authRoutes = [
   '/verify-email'
 ];
 
+// Landing page section routes — rewrite to / so the landing page handles scroll
+const sectionRoutes: Record<string, string> = {
+  '/pricing': 'pricing',
+  '/features': 'features',
+  '/how-it-works': 'how',
+  '/agencies': 'agencies'
+};
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Rewrite section routes to landing page (URL stays clean, e.g. /pricing)
+  if (sectionRoutes[pathname]) {
+    return NextResponse.rewrite(new URL('/', request.url));
+  }
   const isAuthenticated = request.cookies.get(AUTH_COOKIE)?.value === '1';
   const hasRefreshToken = !!request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
   const userRole = request.cookies.get(ROLE_COOKIE)?.value;
@@ -109,6 +122,10 @@ export const config = {
     '/forgot-password',
     '/reset-password',
     '/verify-email',
-    '/change-credentials'
+    '/change-credentials',
+    '/pricing',
+    '/features',
+    '/how-it-works',
+    '/agencies'
   ]
 };
