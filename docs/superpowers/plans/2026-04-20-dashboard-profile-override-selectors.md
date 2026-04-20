@@ -915,9 +915,30 @@ Network tab — `/api/analyze` request body should contain:
 }
 ```
 
-Only the touched field(s) should be in `profileOverride`. No other keys.
+**CRITICAL contract invariant — do not skip this check:** `profileOverride` must contain ONLY touched fields, never the full draft. If the user changed only Platform, the object must have exactly one key: `platform`. It must NOT include `niche`, `audienceAgeRange`, `audienceRegion`, or `averageViewCount`.
+
+Why this matters: the backend merges override-over-base per field with `?? base` fallback. Sending untouched fields would override the DB values with the dashboard's stale display copy — causing drift if Settings was updated in another tab. Touched-only keeps the contract safe.
 
 After results render, navigate back to the input view (click "New Analysis"). All dropdowns should show baseline values; no dots.
+
+- [ ] **Step 6b: Verify touched-only payload with multi-field edits + revert**
+
+Still on the dashboard input view, do this exact sequence:
+1. Change Platform (e.g., TIKTOK → YOUTUBE). Dot appears on Platform.
+2. Change Niche (e.g., FOOD → EDUCATION). Dot appears on Niche. Two dots total.
+3. Change Platform *back* to its original baseline value (YOUTUBE → TIKTOK). Platform's dot disappears. Niche's dot remains.
+4. Click "Analyse Script".
+
+Network tab — the `/api/analyze` body must be:
+```json
+{
+  "scriptText": "...",
+  "language": "en",
+  "profileOverride": { "niche": "EDUCATION" }
+}
+```
+
+Exactly one key in `profileOverride`: `niche`. Platform must NOT appear even though it was changed and reverted. If Platform appears, the `setField` toggle logic in the hook is broken — go back to Task 6 and fix before continuing.
 
 - [ ] **Step 7: Verify reset on error**
 
