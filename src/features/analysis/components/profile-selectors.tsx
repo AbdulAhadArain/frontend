@@ -58,8 +58,8 @@ export function ProfileSelectors({
   const hasEdits = touched.size > 0;
 
   return (
-    <div className='mt-3 rounded-[4px] border border-border bg-[rgba(13,17,23,0.6)] p-3'>
-      <div className='mb-2 flex items-center justify-between'>
+    <div className='mt-2 rounded-[4px] border border-border bg-[rgba(13,17,23,0.6)] p-2.5'>
+      <div className='mb-1.5 flex items-center justify-between'>
         <span className='font-mono text-[11px] text-muted-foreground'>
           Customize for this run
         </span>
@@ -75,13 +75,13 @@ export function ProfileSelectors({
         </Button>
       </div>
 
-      <div className='grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-5'>
+      <div className='grid grid-cols-2 gap-1.5 md:grid-cols-3 lg:grid-cols-5'>
         {FIELDS.map(({ field, label, options }) => {
           const isTouched = touched.has(field);
           const value = draft[field];
           return (
             <div key={field} className='flex min-w-0 flex-col gap-0.5'>
-              <label className='flex items-center font-mono text-[10px] text-muted-foreground'>
+              <label className='flex items-center font-mono text-[11px] text-muted-foreground'>
                 {isTouched && (
                   <span
                     aria-hidden
@@ -94,7 +94,7 @@ export function ProfileSelectors({
                 value={value ?? undefined}
                 onValueChange={(v) => onChange(field, v)}
               >
-                <SelectTrigger className='h-8 min-w-0 text-[12px]'>
+                <SelectTrigger className='h-8 w-full min-w-0 px-2 text-[12px]'>
                   <SelectValue placeholder='Select…' />
                 </SelectTrigger>
                 <SelectContent>
@@ -110,7 +110,7 @@ export function ProfileSelectors({
         })}
       </div>
 
-      <p className='mt-2 text-[10px] text-muted-foreground'>
+      <p className='mt-1.5 text-[11px] text-muted-foreground'>
         These changes apply only to this run. Update in{' '}
         <Link href='/settings' className='text-primary hover:underline'>
           Settings
