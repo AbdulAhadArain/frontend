@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   IconUpload,
@@ -19,6 +19,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAnalysisStore } from '@/stores/analysis.store';
 import { useAuthStore } from '@/stores/auth.store';
 import apiClient from '@/lib/api-client';
+import { analyzeScript } from '@/features/analysis/api/analyze-script';
+import { transcribeFile } from '@/features/analysis/api/transcribe-file';
 import {
   trackScriptAnalyzed,
   trackLimitReached,
@@ -309,13 +311,10 @@ export default function DashboardPage() {
     setLoadingMode('analyze');
     setLoading(true, 'Analysing your script...');
     try {
-      const res = await apiClient.post<ApiSuccessResponse<Analysis>>(
-        '/api/analyze',
-        {
-          scriptText: scriptText.trim(),
-          language: selectedLanguage
-        }
-      );
+      const res = await analyzeScript({
+        scriptText: scriptText.trim(),
+        language: selectedLanguage
+      });
       setAnalysis(res.data.data);
       refreshUser();
       try {
@@ -350,25 +349,11 @@ export default function DashboardPage() {
       : 'Transcribing...');
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      if (analyzeWithTranscription) {
-        formData.append('analyze', 'true');
-        formData.append('language', selectedLanguage);
-      }
-
-      // Post directly to backend API (bypass Vercel proxy which has body size limits)
-      const { accessToken } = useAuthStore.getState();
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/transcribe`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          },
-          timeout: 0
-        }
-      );
+      const res = await transcribeFile({
+        file,
+        analyze: analyzeWithTranscription,
+        language: analyzeWithTranscription ? selectedLanguage : undefined
+      });
 
       const data = res.data.data;
 
