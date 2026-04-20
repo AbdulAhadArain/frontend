@@ -90,3 +90,7 @@ export function trackPlanUpdatedByAdmin(
     oldPlan
   });
 }
+
+export function trackProfileOverrideUsed(fields: string[]) {
+  posthog.capture('profile_override_used', { fields });
+}
