@@ -58,8 +58,8 @@ export function ProfileSelectors({
   const hasEdits = touched.size > 0;
 
   return (
-    <div className='mt-4 rounded-[4px] border border-border bg-[rgba(13,17,23,0.6)] p-3.5'>
-      <div className='mb-3 flex items-center justify-between'>
+    <div className='mt-3 rounded-[4px] border border-border bg-[rgba(13,17,23,0.6)] p-3'>
+      <div className='mb-2 flex items-center justify-between'>
         <span className='font-mono text-[11px] text-muted-foreground'>
           Customize for this run
         </span>
@@ -68,33 +68,33 @@ export function ProfileSelectors({
           size='sm'
           onClick={onReset}
           disabled={!hasEdits}
-          className='h-7 gap-1.5 px-2 text-[11px]'
+          className='h-6 gap-1 px-1.5 text-[11px]'
         >
-          <IconRotateClockwise2 className='size-3.5' />
+          <IconRotateClockwise2 className='size-3' />
           Reset
         </Button>
       </div>
 
-      <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 md:flex md:flex-wrap'>
+      <div className='grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-5'>
         {FIELDS.map(({ field, label, options }) => {
           const isTouched = touched.has(field);
           const value = draft[field];
           return (
-            <div key={field} className='flex flex-col gap-1 md:min-w-[140px] md:flex-1'>
-              <label className='flex items-center font-mono text-[11px] text-muted-foreground'>
+            <div key={field} className='flex min-w-0 flex-col gap-0.5'>
+              <label className='flex items-center font-mono text-[10px] text-muted-foreground'>
                 {isTouched && (
                   <span
                     aria-hidden
-                    className='mr-1.5 inline-block size-1.5 rounded-full bg-primary'
+                    className='mr-1 inline-block size-1 rounded-full bg-primary'
                   />
                 )}
-                {label}
+                <span className='truncate'>{label}</span>
               </label>
               <Select
                 value={value ?? undefined}
                 onValueChange={(v) => onChange(field, v)}
               >
-                <SelectTrigger className='h-9 text-[13px]'>
+                <SelectTrigger className='h-8 min-w-0 text-[12px]'>
                   <SelectValue placeholder='Select…' />
                 </SelectTrigger>
                 <SelectContent>
@@ -110,8 +110,8 @@ export function ProfileSelectors({
         })}
       </div>
 
-      <p className='mt-3 text-[11px] text-muted-foreground'>
-        These changes apply only to this run. Update your saved profile in{' '}
+      <p className='mt-2 text-[10px] text-muted-foreground'>
+        These changes apply only to this run. Update in{' '}
         <Link href='/settings' className='text-primary hover:underline'>
           Settings
         </Link>
