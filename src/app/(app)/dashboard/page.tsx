@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
@@ -27,8 +27,12 @@ import {
   trackUpgradeClicked,
   trackUpgradeCompleted,
   trackFileTranscribed,
-  identifyUser
+  identifyUser,
+  trackProfileOverrideUsed
 } from '@/lib/analytics';
+import { useProfileDraft } from '@/features/analysis/hooks/use-profile-draft';
+import { ProfileSelectors } from '@/features/analysis/components/profile-selectors';
+import type { ProfileBaseline } from '@/features/analysis/types/profile-override';
 import { AnalysisResults } from '@/features/analysis/components/analysis-results';
 import { UpgradeModal } from '@/features/dashboard/components/upgrade-modal';
 import type { Analysis, AnalysisLanguage } from '@/types/analysis';
@@ -144,6 +148,25 @@ export default function DashboardPage() {
   const [phase, setPhase] = useState<'idle' | 'loading' | 'completing'>('idle');
   const progressRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const messageRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const baseline: ProfileBaseline = useMemo(
+    () => ({
+      platform: user?.platform ?? null,
+      niche: user?.niche ?? null,
+      audienceAgeRange: user?.audienceAgeRange ?? null,
+      audienceRegion: user?.audienceRegion ?? null,
+      averageViewCount: user?.averageViewCount ?? null
+    }),
+    [
+      user?.platform,
+      user?.niche,
+      user?.audienceAgeRange,
+      user?.audienceRegion,
+      user?.averageViewCount
+    ]
+  );
+
+  const profileDraft = useProfileDraft(baseline);
 
   // Handle ?checkout=success from Stripe checkout redirect
   useEffect(() => {
@@ -310,13 +333,20 @@ export default function DashboardPage() {
 
     setLoadingMode('analyze');
     setLoading(true, 'Analysing your script...');
+    const override = profileDraft.buildOverridePayload();
     try {
       const res = await analyzeScript({
         scriptText: scriptText.trim(),
-        language: selectedLanguage
+        language: selectedLanguage,
+        profileOverride: override
       });
       setAnalysis(res.data.data);
       refreshUser();
+      if (override) {
+        try {
+          trackProfileOverrideUsed(Object.keys(override));
+        } catch {}
+      }
       try {
         if (user?.id) {
           trackScriptAnalyzed(
@@ -331,6 +361,7 @@ export default function DashboardPage() {
       handleApiError(error);
     } finally {
       setLoading(false);
+      profileDraft.reset();
     }
   }
 
@@ -348,11 +379,13 @@ export default function DashboardPage() {
       ? 'Transcribing & analysing...'
       : 'Transcribing...');
 
+    const override = profileDraft.buildOverridePayload();
     try {
       const res = await transcribeFile({
         file,
         analyze: analyzeWithTranscription,
-        language: analyzeWithTranscription ? selectedLanguage : undefined
+        language: analyzeWithTranscription ? selectedLanguage : undefined,
+        profileOverride: override
       });
 
       const data = res.data.data;
@@ -362,6 +395,11 @@ export default function DashboardPage() {
       }
       if (data.analysis) {
         setAnalysis(data.analysis);
+        if (override) {
+          try {
+            trackProfileOverrideUsed(Object.keys(override));
+          } catch {}
+        }
         try {
           if (user?.id) {
             trackScriptAnalyzed(
@@ -389,6 +427,7 @@ export default function DashboardPage() {
       handleApiError(error);
     } finally {
       setLoading(false);
+      profileDraft.reset();
     }
   }
 
@@ -591,6 +630,15 @@ export default function DashboardPage() {
                 Also analyse after transcription
               </label>
             )}
+
+            {/* Profile override selectors */}
+            <ProfileSelectors
+              baseline={baseline}
+              draft={profileDraft.draft}
+              touched={profileDraft.touched}
+              onChange={profileDraft.setField}
+              onReset={profileDraft.reset}
+            />
 
             {/* Language selector */}
             <div className='mt-4 flex items-center gap-3'>
